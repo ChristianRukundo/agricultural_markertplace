@@ -1,0 +1,57 @@
+{
+  "name": "agriconnect-rwanda-backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "postinstall": "prisma generate",
+    "lint": "next lint",
+    "start": "next start",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^1.4.0",
+    "@gsap/react": "^2.1.2",
+    "@prisma/client": "^5.7.1",
+    "@t3-oss/env-nextjs": "^0.13.8",
+    "@tanstack/react-query": "^5.83.0",
+    "@tanstack/react-query-devtools": "^5.83.0",
+    "@trpc/client": "^11.4.3",
+    "@trpc/react-query": "^11.4.3",
+    "@trpc/server": "^11.4.3",
+    "autoprefixer": "^10.0.1",
+    "bcryptjs": "^2.4.3",
+    "class-variance-authority": "^0.7.1",
+    "cloudinary": "^1.41.3",
+    "clsx": "^2.1.1",
+    "gsap": "^3.13.0",
+    "next": "^15.0.0",
+    "next-auth": "^4.24.5",
+    "postcss": "^8",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "superjson": "^2.2.2",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5.3.3",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.10.5",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^15.0.0",
+    "prisma": "^5.7.1",
+    "tsx": "^4.6.2"
+  },
+  "ct3aMetadata": {
+    "initVersion": "7.25.2"
+  }
+}
