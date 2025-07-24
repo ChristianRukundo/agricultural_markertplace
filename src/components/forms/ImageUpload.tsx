@@ -2,174 +2,207 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useCallback } from "react"
 import { useGSAP } from "@gsap/react"
 import gsap from "gsap"
-import { Button } from "@/components/ui/Button"
-import { Spinner } from "@/components/ui/Spinner"
 
 interface ImageUploadProps {
-  value?: string[]
-  onChange: (images: string[]) => void
-  maxImages?: number
+  onUpload: (files: File[]) => void
+  maxFiles?: number
   maxSize?: number // in MB
-  accept?: string
+  acceptedTypes?: string[]
   className?: string
 }
 
 export function ImageUpload({
-  value = [],
-  onChange,
-  maxImages = 5,
-  maxSize = 5,
-  accept = "image/*",
+  onUpload,
+  maxFiles = 5,
+  maxSize = 10,
+  acceptedTypes = ["image/jpeg", "image/png", "image/webp"],
   className = "",
 }: ImageUploadProps) {
-  const [uploading, setUploading] = useState(false)
-  const [dragOver, setDragOver] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
+  const [error, setError] = useState<string>("")
+
   const dropZoneRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { contextSafe } = useGSAP({ scope: dropZoneRef })
 
-  const animateDropZone = contextSafe((isDragOver: boolean) => {
+  const animateDropZone = contextSafe((scale: number, opacity: number) => {
     gsap.to(dropZoneRef.current, {
-      scale: isDragOver ? 1.02 : 1,
-      borderColor: isDragOver ? "#3B82F6" : "#D1D5DB",
-      backgroundColor: isDragOver ? "rgba(59, 130, 246, 0.05)" : "transparent",
+      scale,
+      opacity,
       duration: 0.2,
       ease: "power2.out",
     })
   })
 
-  const handleFileSelect = async (files: FileList) => {
-    if (value.length + files.length > maxImages) {
-      alert(`Maximum ${maxImages} images allowed`)
-      return
+  const validateFiles = (files: File[]): string | null => {
+    if (files.length > maxFiles) {
+      return `Maximum ${maxFiles} files allowed`
     }
 
-    setUploading(true)
-    const newImages: string[] = []
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
-
+    for (const file of files) {
+      if (!acceptedTypes.includes(file.type)) {
+        return `File type ${file.type} not supported`
+      }
       if (file.size > maxSize * 1024 * 1024) {
-        alert(`File ${file.name} is too large. Maximum size is ${maxSize}MB`)
-        continue
-      }
-
-      try {
-        // Create FormData for upload
-        const formData = new FormData()
-        formData.append("file", file)
-
-        // Upload to your API endpoint
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        })
-
-        if (response.ok) {
-          const { url } = await response.json()
-          newImages.push(url)
-        } else {
-          throw new Error("Upload failed")
-        }
-      } catch (error) {
-        console.error("Upload error:", error)
-        alert(`Failed to upload ${file.name}`)
+        return `File size must be less than ${maxSize}MB`
       }
     }
 
-    onChange([...value, ...newImages])
-    setUploading(false)
+    return null
   }
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-    animateDropZone(false)
+  const handleFiles = useCallback(
+    (files: File[]) => {
+      const validationError = validateFiles(files)
+      if (validationError) {
+        setError(validationError)
+        return
+      }
 
-    const files = e.dataTransfer.files
-    if (files.length > 0) {
-      handleFileSelect(files)
-    }
-  }
+      setError("")
+      setUploadedFiles(files)
+      onUpload(files)
+    },
+    [maxFiles, maxSize, acceptedTypes, onUpload],
+  )
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    if (!dragOver) {
-      setDragOver(true)
-      animateDropZone(true)
-    }
-  }
+  const handleDragOver = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      if (!isDragging) {
+        setIsDragging(true)
+        animateDropZone(1.02, 1)
+      }
+    },
+    [isDragging, animateDropZone],
+  )
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-    animateDropZone(false)
-  }
+  const handleDragLeave = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      if (isDragging) {
+        setIsDragging(false)
+        animateDropZone(1, 0.8)
+      }
+    },
+    [isDragging, animateDropZone],
+  )
 
-  const removeImage = (index: number) => {
-    const newImages = value.filter((_, i) => i !== index)
-    onChange(newImages)
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      setIsDragging(false)
+      animateDropZone(1, 1)
+
+      const files = Array.from(e.dataTransfer.files)
+      handleFiles(files)
+    },
+    [handleFiles, animateDropZone],
+  )
+
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files || [])
+      handleFiles(files)
+    },
+    [handleFiles],
+  )
+
+  const removeFile = (index: number) => {
+    const newFiles = uploadedFiles.filter((_, i) => i !== index)
+    setUploadedFiles(newFiles)
+    onUpload(newFiles)
   }
 
   return (
     <div className={`space-y-4 ${className}`}>
       <div
         ref={dropZoneRef}
-        onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center transition-all duration-200 cursor-pointer hover:border-primary-400"
+        onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
+        className={`
+          relative cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition-all duration-300
+          ${
+            isDragging
+              ? "border-primary-400 bg-primary-50 dark:bg-primary-900/20"
+              : "border-gray-300 dark:border-gray-600 bg-white/5 dark:bg-black/5 hover:bg-white/10 dark:hover:bg-black/10"
+          }
+          backdrop-blur-sm
+        `}
       >
-        {uploading ? (
-          <div className="flex flex-col items-center gap-2">
-            <Spinner size="lg" />
-            <p className="text-gray-600 dark:text-gray-400">Uploading images...</p>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept={acceptedTypes.join(",")}
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+
+        <div className="space-y-4">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
           </div>
-        ) : (
-          <div className="space-y-2">
-            <div className="text-4xl">📸</div>
-            <p className="text-gray-600 dark:text-gray-400">Drop images here or click to select</p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
-              Maximum {maxImages} images, {maxSize}MB each
+
+          <div>
+            <p className="text-lg font-medium text-gray-900 dark:text-white">
+              Drop your images here, or <span className="text-primary-600 dark:text-primary-400">browse</span>
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Support for {acceptedTypes.map((type) => type.split("/")[1]).join(", ")} files up to {maxSize}MB
             </p>
           </div>
-        )}
+        </div>
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        accept={accept}
-        onChange={(e) => e.target.files && handleFileSelect(e.target.files)}
-        className="hidden"
-      />
+      {error && (
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
 
-      {value.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {value.map((image, index) => (
-            <div key={index} className="relative group">
-              <img
-                src={image || "/placeholder.svg"}
-                alt={`Upload ${index + 1}`}
-                className="w-full h-24 object-cover rounded-lg"
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeImage(index)}
-                className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 h-auto min-h-0"
+      {uploadedFiles.length > 0 && (
+        <div className="space-y-2">
+          <h4 className="font-medium text-gray-900 dark:text-white">Uploaded Files</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {uploadedFiles.map((file, index) => (
+              <div
+                key={index}
+                className="relative group bg-white/10 dark:bg-black/10 backdrop-blur-sm border border-white/20 dark:border-white/10 rounded-xl p-3"
               >
-                ×
-              </Button>
-            </div>
-          ))}
+                <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg mb-2 overflow-hidden">
+                  <img
+                    src={URL.createObjectURL(file) || "/placeholder.svg"}
+                    alt={file.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{file.name}</p>
+                <button
+                  onClick={() => removeFile(index)}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
