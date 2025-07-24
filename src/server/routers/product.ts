@@ -17,7 +17,7 @@ export const productRouter = createTRPCRouter({
    */
   create: protectedProcedure.input(createProductSchema).mutation(async ({ ctx, input }) => {
     try {
-      const userId = ctx.session.user.id
+      const userId = ctx.session.user.id as string // Cast userId to string
 
       // Verify user is a farmer
       if (ctx.session.user.role !== "FARMER") {
@@ -33,7 +33,8 @@ export const productRouter = createTRPCRouter({
         include: { farmerProfile: true },
       })
 
-      if (!profile?.farmerProfile) {
+      // Ensure profile and farmerProfile exist
+      if (!profile || !profile.farmerProfile) { // Added check for profile
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "Please complete your farmer profile first",
@@ -55,7 +56,7 @@ export const productRouter = createTRPCRouter({
       const product = await ctx.db.product.create({
         data: {
           ...input,
-          farmerId: profile.farmerProfile.id,
+          farmerId: profile.farmerProfile.id, // Now TypeScript knows farmerProfile exists
         },
         include: {
           category: true,
@@ -266,7 +267,7 @@ export const productRouter = createTRPCRouter({
    */
   update: protectedProcedure.input(updateProductSchema).mutation(async ({ ctx, input }) => {
     try {
-      const userId = ctx.session.user.id
+      const userId = ctx.session.user.id as string // Cast userId to string
       const { id, ...updateData } = input
 
       // Get user's farmer profile
@@ -275,7 +276,7 @@ export const productRouter = createTRPCRouter({
         include: { farmerProfile: true },
       })
 
-      if (!profile?.farmerProfile) {
+      if (!profile || !profile.farmerProfile) { // Added check for profile
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only farmers can update products",
@@ -294,7 +295,7 @@ export const productRouter = createTRPCRouter({
         })
       }
 
-      if (product.farmerId !== profile.farmerProfile.id) {
+      if (product.farmerId !== profile.farmerProfile.id) { // Now TypeScript knows farmerProfile exists
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You can only update your own products",
@@ -340,7 +341,7 @@ export const productRouter = createTRPCRouter({
    */
   updateStatus: protectedProcedure.input(updateProductStatusSchema).mutation(async ({ ctx, input }) => {
     try {
-      const userId = ctx.session.user.id
+      const userId = ctx.session.user.id as string // Cast userId to string
       const { id, status } = input
 
       // Get user's farmer profile
@@ -349,7 +350,7 @@ export const productRouter = createTRPCRouter({
         include: { farmerProfile: true },
       })
 
-      if (!profile?.farmerProfile) {
+      if (!profile || !profile.farmerProfile) { // Added check for profile
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only farmers can update product status",
@@ -368,7 +369,7 @@ export const productRouter = createTRPCRouter({
         })
       }
 
-      if (product.farmerId !== profile.farmerProfile.id) {
+      if (product.farmerId !== profile.farmerProfile.id) { // Now TypeScript knows farmerProfile exists
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You can only update your own products",
@@ -401,7 +402,7 @@ export const productRouter = createTRPCRouter({
    */
   delete: protectedProcedure.input(getProductByIdSchema).mutation(async ({ ctx, input }) => {
     try {
-      const userId = ctx.session.user.id
+      const userId = ctx.session.user.id as string // Cast userId to string
       const { id } = input
 
       // Get user's farmer profile
@@ -410,7 +411,7 @@ export const productRouter = createTRPCRouter({
         include: { farmerProfile: true },
       })
 
-      if (!profile?.farmerProfile) {
+      if (!profile || !profile.farmerProfile) { // Added check for profile
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only farmers can delete products",
@@ -432,7 +433,7 @@ export const productRouter = createTRPCRouter({
         })
       }
 
-      if (product.farmerId !== profile.farmerProfile.id) {
+      if (product.farmerId !== profile.farmerProfile.id) { // Now TypeScript knows farmerProfile exists
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You can only delete your own products",
@@ -471,7 +472,7 @@ export const productRouter = createTRPCRouter({
    */
   getMyProducts: protectedProcedure.input(getProductsSchema.omit({ farmerId: true })).query(async ({ ctx, input }) => {
     try {
-      const userId = ctx.session.user.id
+      const userId = ctx.session.user.id as string // Cast userId to string
 
       // Get user's farmer profile
       const profile = await ctx.db.profile.findUnique({
@@ -479,7 +480,7 @@ export const productRouter = createTRPCRouter({
         include: { farmerProfile: true },
       })
 
-      if (!profile?.farmerProfile) {
+      if (!profile || !profile.farmerProfile) { // Added check for profile
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only farmers can view their products",
@@ -492,7 +493,7 @@ export const productRouter = createTRPCRouter({
 
       // Build where clause
       const where: any = {
-        farmerId: profile.farmerProfile.id,
+        farmerId: profile.farmerProfile.id, // Now TypeScript knows farmerProfile exists
       }
 
       if (categoryId) where.categoryId = categoryId

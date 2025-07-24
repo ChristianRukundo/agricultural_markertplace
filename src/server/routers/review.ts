@@ -11,7 +11,8 @@ export const reviewRouter = createTRPCRouter({
    */
   create: protectedProcedure.input(createReviewSchema).mutation(async ({ ctx, input }) => {
     try {
-      const userId = ctx.session.user.id
+      const userId = ctx.session.user.id as string;
+    
       const { reviewedEntityId, reviewedEntityType, rating, comment } = input
 
       // Check if user has already reviewed this entity

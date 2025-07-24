@@ -8,6 +8,7 @@ import { reviewRouter } from "@/server/routers/review"
 import { notificationRouter } from "@/server/routers/notification"
 import { adminRouter } from "@/server/routers/admin"
 import { categoryRouter } from "@/server/routers/category"
+import { contactRouter } from "@/server/routers/contact"
 
 /**
  * This is the primary router for your server.
@@ -18,6 +19,7 @@ export const appRouter = createTRPCRouter({
   auth: authRouter,
   user: userRouter,
   product: productRouter,
+  contact : contactRouter,
   order: orderRouter,
   chat: chatRouter,
   review: reviewRouter,

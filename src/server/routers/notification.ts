@@ -15,7 +15,7 @@ export const notificationRouter = createTRPCRouter({
    */
   getNotifications: protectedProcedure.input(getNotificationsSchema).query(async ({ ctx, input }) => {
     try {
-      const userId = ctx.session.user.id
+      const userId = ctx.session.user.id as string;
       const { isRead, type, page, limit } = input
 
       const skip = (page - 1) * limit
@@ -195,7 +195,7 @@ export const notificationRouter = createTRPCRouter({
    */
   getStats: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const userId = ctx.session.user.id
+      const userId = ctx.session.user.id as string;
 
       const [totalCount, unreadCount, typeStats] = await Promise.all([
         ctx.db.notification.count({

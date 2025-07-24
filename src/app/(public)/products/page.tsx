@@ -61,7 +61,7 @@ export default function ProductsPage() {
             <option value="">All Categories</option>
             {categories?.categories.map((category) => (
               <option key={category.id} value={category.id}>
-                {category.name} ({category._count?.products || 0})
+                {category.name}
               </option>
             ))}
           </select>

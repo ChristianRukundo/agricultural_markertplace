@@ -17,7 +17,7 @@ export const chatRouter = createTRPCRouter({
    */
   createSession: protectedProcedure.input(createChatSessionSchema).mutation(async ({ ctx, input }) => {
     try {
-      const userId = ctx.session.user.id
+      const userId = ctx.session.user.id as string;
       const { participantId } = input
 
       // Verify participant exists
@@ -107,7 +107,7 @@ export const chatRouter = createTRPCRouter({
    */
   getSessions: protectedProcedure.input(getChatSessionsSchema).query(async ({ ctx, input }) => {
     try {
-      const userId = ctx.session.user.id
+      const userId = ctx.session.user.id as string;;
       const { page, limit } = input
       const skip = (page - 1) * limit
 

@@ -46,7 +46,7 @@ export function PageTransitionOverlay() {
     <div
       ref={overlayRef}
       className="fixed inset-0 z-50 bg-gradient-to-br from-primary-500 to-primary-700 pointer-events-none"
-      style={{ scaleY: 0 }}
+      style={{ transform: "scaleY(0)" }}
     />
   )
 }

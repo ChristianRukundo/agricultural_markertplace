@@ -203,7 +203,7 @@ export const authRouter = createTRPCRouter({
   changePassword: protectedProcedure.input(changePasswordSchema).mutation(async ({ ctx, input }) => {
     try {
       const { currentPassword, newPassword } = input
-      const userId = ctx.session.user.id
+      const userId = ctx.session.user.id as string;
 
       const user = await ctx.db.user.findUnique({
         where: { id: userId },
