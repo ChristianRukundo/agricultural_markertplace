@@ -1,10 +1,10 @@
 import { TRPCError } from "@trpc/server"
 import { z } from "zod"
-import { createTRPCRouter, protectedProcedure, adminProcedure } from "@/lib/trpc/server"
-import { locationSchema } from "@/lib/utils/validation"
+import { createTRPCRouter, protectedProcedure, publicProcedure, adminProcedure } from "@/lib/trpc/server"
+import { locationSchema, paginationSchema } from "@/lib/utils/validation"
 
 /**
- * User profile management router
+ * User profile management and farmer listing router
  */
 export const userRouter = createTRPCRouter({
   /**
@@ -12,7 +12,7 @@ export const userRouter = createTRPCRouter({
    */
   getProfile: protectedProcedure.query(async ({ ctx }) => {
     try {
-      const userId = ctx.session.user.id
+      const userId = ctx.session.user.id as string
 
       const profile = await ctx.db.profile.findUnique({
         where: { userId },
@@ -52,8 +52,245 @@ export const userRouter = createTRPCRouter({
   }),
 
   /**
-   * Update user profile
+   * Get a list of all farmers with advanced filtering and sorting.
    */
+  getFarmers: publicProcedure
+    .input(
+      z
+        .object({
+          search: z.string().optional(),
+          district: z.string().optional(),
+          specialization: z.string().optional(),
+          minRating: z.number().min(0).max(5).optional(),
+          sortBy: z.enum(["name", "rating", "products", "recent"]).default("rating"),
+          ...paginationSchema.shape,
+        })
+        .default({}),
+    )
+    .query(async ({ ctx, input }) => {
+      const { page, limit, search, district, specialization, minRating, sortBy } = input
+
+      const skip = (page - 1) * limit
+
+      const where: any = {
+        role: "FARMER",
+        isVerified: true,
+      }
+
+      if (search) {
+        where.profile = {
+          ...where.profile,
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { description: { contains: search, mode: "insensitive" } },
+            { farmerProfile: { bio: { contains: search, mode: "insensitive" } } },
+          ],
+        }
+      }
+
+      if (district) {
+        where.profile = {
+          ...where.profile,
+          location: { contains: `"${district}"`, mode: "insensitive" },
+        }
+      }
+
+      if (specialization) {
+        where.profile = {
+          ...where.profile,
+          farmerProfile: {
+            ...where.profile?.farmerProfile,
+            certifications: { has: specialization },
+          },
+        }
+      }
+
+      let orderBy: any = {}
+      switch (sortBy) {
+        case "name":
+          orderBy = { profile: { name: "asc" } }
+          break
+        case "products":
+          orderBy = { profile: { farmerProfile: { products: { _count: "desc" } } } }
+          break
+        case "recent":
+          orderBy = { createdAt: "desc" }
+          break
+        case "rating":
+        default:
+          orderBy = { createdAt: "desc" }
+          break
+      }
+
+      const [farmers, total] = await ctx.db.$transaction([
+        ctx.db.user.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy,
+          select: {
+            id: true,
+            createdAt: true,
+            profile: {
+              select: {
+                name: true,
+                description: true,
+                location: true,
+                profilePictureUrl: true,
+                farmerProfile: {
+                  select: {
+                    certifications: true,
+                  },
+                },
+              },
+            },
+            _count: {
+              select: {
+                ordersAsFarmer: { where: { status: "DELIVERED" } },
+              },
+            },
+          },
+        }),
+        ctx.db.user.count({ where }),
+      ])
+
+      const farmersWithRatings = await Promise.all(
+        farmers.map(async (farmer) => {
+          const ratingAggregation = await ctx.db.review.aggregate({
+            where: {
+              reviewedEntityId: farmer.id,
+              reviewedEntityType: "FARMER",
+              isApproved: true,
+            },
+            _avg: { rating: true },
+            _count: { _all: true },
+          })
+          return {
+            ...farmer,
+            averageRating: ratingAggregation._avg.rating ?? 0,
+            reviewCount: ratingAggregation._count._all,
+          }
+        }),
+      )
+
+      let filteredFarmers = farmersWithRatings
+      if (minRating) {
+        filteredFarmers = farmersWithRatings.filter((f) => f.averageRating >= minRating)
+      }
+
+      if (sortBy === "rating") {
+        filteredFarmers.sort((a, b) => b.averageRating - a.averageRating)
+      }
+
+      return {
+        farmers: filteredFarmers.map((f) => ({
+          ...f,
+          profile: {
+            ...f.profile,
+            // specializations are now correctly mapped from farmerProfile.certifications for the frontend
+            specializations: f.profile?.farmerProfile?.certifications ? JSON.stringify(f.profile.farmerProfile.certifications) : "[]",
+          },
+        })),
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      }
+    }),
+
+  getFarmerStats: publicProcedure.query(async ({ ctx }) => {
+    const [totalFarmers, totalProducts, ratingAggregation, profiles] = await ctx.db.$transaction([
+      ctx.db.user.count({ where: { role: "FARMER", isVerified: true } }),
+      ctx.db.product.count({ where: { status: "ACTIVE" } }),
+      ctx.db.review.aggregate({
+        where: { reviewedEntityType: "FARMER", isApproved: true },
+        _avg: { rating: true },
+      }),
+      ctx.db.profile.findMany({
+        where: { user: { role: "FARMER", isVerified: true } },
+        select: { location: true },
+      }),
+    ])
+
+    const districts = new Set(
+      profiles.map((p) => (p.location ? JSON.parse(p.location).district : null)).filter(Boolean),
+    )
+
+    return {
+      totalFarmers,
+      totalProducts,
+      averageRating: ratingAggregation._avg.rating ?? 0,
+      districtsCount: districts.size,
+    }
+  }),
+
+  getFarmerProfile: publicProcedure
+    .input(z.object({ id: z.string().cuid() }))
+    .query(async ({ ctx, input }) => {
+      const farmer = await ctx.db.user.findUnique({
+        where: { id: input.id, role: "FARMER" },
+        select: {
+          id: true,
+          createdAt: true,
+          profile: {
+            select: {
+              name: true,
+              description: true,
+              location: true,
+              profilePictureUrl: true,
+              contactEmail: true,
+              contactPhone: true,
+              createdAt: true,
+              farmerProfile: {
+                select: {
+                  certifications: true,
+                  _count: {
+                    select: { products: { where: { status: 'ACTIVE' } } }
+                  }
+                }
+              }
+            },
+          },
+          _count: {
+            select: {
+              ordersAsFarmer: { where: { status: "DELIVERED" } },
+            },
+          },
+        },
+      })
+
+      if (!farmer) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Farmer not found." })
+      }
+
+      const ratingAggregation = await ctx.db.review.aggregate({
+        where: {
+          reviewedEntityId: farmer.id,
+          reviewedEntityType: "FARMER",
+          isApproved: true,
+        },
+        _avg: { rating: true },
+        _count: { _all: true },
+      })
+
+      // Correctly structure the response to match frontend expectations
+      return {
+        ...farmer,
+        averageRating: ratingAggregation._avg.rating ?? 0,
+        _count: {
+          receivedReviews: ratingAggregation._count._all,
+          orders: farmer._count.ordersAsFarmer,
+          products: farmer.profile?.farmerProfile?._count.products ?? 0,
+        },
+        profile: {
+          ...farmer.profile,
+          specializations: JSON.stringify(farmer.profile?.farmerProfile?.certifications || []),
+        }
+      }
+    }),
+
   updateProfile: protectedProcedure
     .input(
       z.object({
@@ -68,12 +305,16 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const userId = ctx.session.user.id
+        const userId = ctx.session.user.id as string
 
         const updatedProfile = await ctx.db.profile.update({
           where: { userId },
           data: {
-            ...input,
+            name: input.name,
+            description: input.description,
+            profilePictureUrl: input.profilePictureUrl,
+            contactEmail: input.contactEmail,
+            contactPhone: input.contactPhone,
             location: input.location ? JSON.stringify(input.location) : undefined,
             socialLinks: input.socialLinks || undefined,
           },
@@ -92,9 +333,6 @@ export const userRouter = createTRPCRouter({
       }
     }),
 
-  /**
-   * Update farmer-specific profile
-   */
   updateFarmerProfile: protectedProcedure
     .input(
       z.object({
@@ -108,58 +346,30 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const userId = ctx.session.user.id
+        const userId = ctx.session.user.id as string
 
-        // Verify user is a farmer
         if (ctx.session.user.role !== "FARMER") {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Only farmers can update farmer profile",
-          })
+          throw new TRPCError({ code: "FORBIDDEN", message: "Only farmers can update farmer profile" })
         }
 
-        // Get user's profile ID
-        const profile = await ctx.db.profile.findUnique({
-          where: { userId },
-        })
-
+        const profile = await ctx.db.profile.findUnique({ where: { userId } })
         if (!profile) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Profile not found",
-          })
+          throw new TRPCError({ code: "NOT_FOUND", message: "Profile not found" })
         }
 
-        // Upsert farmer profile
         const farmerProfile = await ctx.db.farmerProfile.upsert({
           where: { profileId: profile.id },
           update: input,
-          create: {
-            profileId: profile.id,
-            ...input,
-            certifications: input.certifications || [],
-          },
+          create: { profileId: profile.id, ...input, certifications: input.certifications || [] },
         })
 
-        return {
-          success: true,
-          message: "Farmer profile updated successfully",
-          farmerProfile,
-        }
+        return { success: true, message: "Farmer profile updated successfully", farmerProfile }
       } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error
-        }
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update farmer profile",
-        })
+        if (error instanceof TRPCError) throw error
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to update farmer profile" })
       }
     }),
 
-  /**
-   * Update seller-specific profile
-   */
   updateSellerProfile: protectedProcedure
     .input(
       z.object({
@@ -170,122 +380,30 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const userId = ctx.session.user.id
+        const userId = ctx.session.user.id as string
 
-        // Verify user is a seller
         if (ctx.session.user.role !== "SELLER") {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Only sellers can update seller profile",
-          })
+          throw new TRPCError({ code: "FORBIDDEN", message: "Only sellers can update seller profile" })
         }
 
-        // Get user's profile ID
-        const profile = await ctx.db.profile.findUnique({
-          where: { userId },
-        })
-
+        const profile = await ctx.db.profile.findUnique({ where: { userId } })
         if (!profile) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Profile not found",
-          })
+          throw new TRPCError({ code: "NOT_FOUND", message: "Profile not found" })
         }
 
-        // Upsert seller profile
         const sellerProfile = await ctx.db.sellerProfile.upsert({
           where: { profileId: profile.id },
           update: input,
-          create: {
-            profileId: profile.id,
-            ...input,
-          },
+          create: { profileId: profile.id, ...input },
         })
 
-        return {
-          success: true,
-          message: "Seller profile updated successfully",
-          sellerProfile,
-        }
+        return { success: true, message: "Seller profile updated successfully", sellerProfile }
       } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error
-        }
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update seller profile",
-        })
+        if (error instanceof TRPCError) throw error
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to update seller profile" })
       }
     }),
 
-  /**
-   * Get user profile by ID (public info only)
-   */
-  getPublicProfile: protectedProcedure
-    .input(
-      z.object({
-        userId: z.string().cuid("Invalid user ID"),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      try {
-        const profile = await ctx.db.profile.findUnique({
-          where: { userId: input.userId },
-          select: {
-            id: true,
-            name: true,
-            location: true,
-            description: true,
-            profilePictureUrl: true,
-            socialLinks: true,
-            createdAt: true,
-            user: {
-              select: {
-                id: true,
-                role: true,
-                isVerified: true,
-                createdAt: true,
-              },
-            },
-            farmerProfile: {
-              select: {
-                farmName: true,
-                farmCapacity: true,
-                certifications: true,
-                bio: true,
-              },
-            },
-            sellerProfile: {
-              select: {
-                businessName: true,
-                deliveryOptions: true,
-              },
-            },
-          },
-        })
-
-        if (!profile) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Profile not found",
-          })
-        }
-
-        return profile
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error
-        }
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch profile",
-        })
-      }
-    }),
-
-  /**
-   * Update user role (admin only)
-   */
   updateUserRole: adminProcedure
     .input(
       z.object({
