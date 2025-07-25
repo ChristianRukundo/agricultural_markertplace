@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/Button"
-import { FadeIn } from "@/components/animations/FadeIn"
+import { Button } from "@/components/ui/button"
+import { FadeIn } from "@/components/animations/fade-in"
 
 export default function NotFound() {
   return (

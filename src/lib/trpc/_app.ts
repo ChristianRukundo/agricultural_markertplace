@@ -9,6 +9,7 @@ import { notificationRouter } from "@/server/routers/notification"
 import { adminRouter } from "@/server/routers/admin"
 import { categoryRouter } from "@/server/routers/category"
 import { contactRouter } from "@/server/routers/contact"
+import { newsletterRouter } from "@/server/routers/newsletter"
 
 /**
  * This is the primary router for your server.
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
   notification: notificationRouter,
   admin: adminRouter,
   category: categoryRouter,
+  newsletter: newsletterRouter,
 })
 
 // export type definition of API

@@ -1,89 +1,123 @@
 import Link from "next/link"
-import { SITE_CONFIG, CONTACT_INFO } from "@/lib/constants"
+import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from "lucide-react"
+
+const CONTACT_INFO = {
+  email: "hello@agriconnect.rw",
+  phone: "+250 788 123 456",
+  address: "Kigali, Rwanda",
+  social: {
+    facebook: "https://facebook.com/agriconnect",
+    twitter: "https://twitter.com/agriconnect",
+    instagram: "https://instagram.com/agriconnect",
+  },
+}
 
 export function Footer() {
   return (
-    <footer className="bg-muted/50 border-t border-border">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <footer className="bg-muted/50 border-t">
+      <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Company Info */}
-          <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">AC</span>
+          {/* Brand */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">A</span>
               </div>
-              <span className="text-xl font-bold gradient-text">{SITE_CONFIG.name}</span>
+              <span className="text-xl font-bold gradient-text">AgriConnect</span>
             </div>
-            <p className="text-muted-foreground mb-4 max-w-md">{SITE_CONFIG.description}</p>
-            <div className="flex space-x-4">
-              <Link
-                href={SITE_CONFIG.links.facebook}
-                className="text-muted-foreground hover:text-primary transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Facebook
-              </Link>
-              <Link
-                href={SITE_CONFIG.links.twitter}
-                className="text-muted-foreground hover:text-primary transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Twitter
-              </Link>
-              <Link
-                href={SITE_CONFIG.links.instagram}
-                className="text-muted-foreground hover:text-primary transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Instagram
-              </Link>
-            </div>
+            <p className="text-muted-foreground">
+              Connecting farmers directly with sellers for a sustainable agricultural future.
+            </p>
           </div>
 
           {/* Quick Links */}
-          <div>
-            <h3 className="font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="/products" className="text-muted-foreground hover:text-primary transition-colors">
-                  Products
-                </Link>
-              </li>
-              <li>
-                <Link href="/farmers" className="text-muted-foreground hover:text-primary transition-colors">
-                  Farmers
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-muted-foreground hover:text-primary transition-colors">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">
-                  Contact
-                </Link>
-              </li>
-            </ul>
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg">Quick Links</h3>
+            <div className="space-y-2">
+              <Link href="/products" className="block text-muted-foreground hover:text-foreground transition-colors">
+                Browse Products
+              </Link>
+              <Link href="/farmers" className="block text-muted-foreground hover:text-foreground transition-colors">
+                Find Farmers
+              </Link>
+              <Link href="/about" className="block text-muted-foreground hover:text-foreground transition-colors">
+                About Us
+              </Link>
+              <Link href="/contact" className="block text-muted-foreground hover:text-foreground transition-colors">
+                Contact
+              </Link>
+            </div>
+          </div>
+
+          {/* For Users */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg">For Users</h3>
+            <div className="space-y-2">
+              <Link
+                href="/auth/register"
+                className="block text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Join as Farmer
+              </Link>
+              <Link
+                href="/auth/register"
+                className="block text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Join as Seller
+              </Link>
+              <Link href="/dashboard" className="block text-muted-foreground hover:text-foreground transition-colors">
+                Dashboard
+              </Link>
+              <Link href="/help" className="block text-muted-foreground hover:text-foreground transition-colors">
+                Help Center
+              </Link>
+            </div>
           </div>
 
           {/* Contact Info */}
-          <div>
-            <h3 className="font-semibold mb-4">Contact</h3>
-            <ul className="space-y-2 text-muted-foreground">
-              <li>{CONTACT_INFO.email}</li>
-              <li>{CONTACT_INFO.phone}</li>
-              <li>{CONTACT_INFO.address}</li>
-              <li>{CONTACT_INFO.hours}</li>
-            </ul>
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg">Contact Info</h3>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2 text-muted-foreground">
+                <Mail className="w-4 h-4" />
+                <span>{CONTACT_INFO.email}</span>
+              </div>
+              <div className="flex items-center space-x-2 text-muted-foreground">
+                <Phone className="w-4 h-4" />
+                <span>{CONTACT_INFO.phone}</span>
+              </div>
+              <div className="flex items-center space-x-2 text-muted-foreground">
+                <MapPin className="w-4 h-4" />
+                <span>{CONTACT_INFO.address}</span>
+              </div>
+            </div>
+
+            {/* Social Links */}
+            <div className="flex space-x-4">
+              <Link
+                href={CONTACT_INFO.social.facebook}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Facebook className="w-5 h-5" />
+              </Link>
+              <Link
+                href={CONTACT_INFO.social.twitter}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Twitter className="w-5 h-5" />
+              </Link>
+              <Link
+                href={CONTACT_INFO.social.instagram}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Instagram className="w-5 h-5" />
+              </Link>
+            </div>
           </div>
         </div>
 
-        <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground">
-          <p>&copy; 2024 {SITE_CONFIG.name}. All rights reserved.</p>
+        <div className="border-t mt-8 pt-8 text-center text-muted-foreground">
+          <p>&copy; 2024 AgriConnect. All rights reserved.</p>
         </div>
       </div>
     </footer>

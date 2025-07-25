@@ -1,141 +1,110 @@
 "use client"
 
-import type React from "react"
-
-import { useRef, useEffect, useState } from "react"
-import { useGSAP } from "@gsap/react"
-import gsap from "gsap"
-import { Button } from "./Button"
+import { useState, useEffect, useRef } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { useGSAP } from "@/components/providers/gsap-provider"
 
 interface CarouselProps {
-  children: React.ReactNode[]
-  autoPlay?: boolean
-  interval?: number
-  showDots?: boolean
-  showArrows?: boolean
+  images: string[]
+  alt: string
   className?: string
 }
 
-export function Carousel({
-  children,
-  autoPlay = false,
-  interval = 5000,
-  showDots = true,
-  showArrows = true,
-  className = "",
-}: CarouselProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
+export function Carousel({ images, alt, className }: CarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isAnimating, setIsAnimating] = useState(false)
-
-  const { contextSafe } = useGSAP({ scope: containerRef })
-
-  const slideToIndex = contextSafe((index: number) => {
-    if (isAnimating || index === currentIndex) return
-
-    setIsAnimating(true)
-    const container = containerRef.current
-    if (!container) return
-
-    const slides = container.querySelectorAll("[data-slide]")
-    const currentSlide = slides[currentIndex]
-    const nextSlide = slides[index]
-
-    gsap
-      .timeline()
-      .to(currentSlide, {
-        x: index > currentIndex ? "-100%" : "100%",
-        opacity: 0,
-        duration: 0.5,
-        ease: "power2.inOut",
-      })
-      .fromTo(
-        nextSlide,
-        {
-          x: index > currentIndex ? "100%" : "-100%",
-          opacity: 0,
-        },
-        {
-          x: "0%",
-          opacity: 1,
-          duration: 0.5,
-          ease: "power2.inOut",
-        },
-        "-=0.3",
-      )
-      .call(() => {
-        setCurrentIndex(index)
-        setIsAnimating(false)
-      })
-  })
-
-  const nextSlide = () => {
-    const nextIndex = (currentIndex + 1) % children.length
-    slideToIndex(nextIndex)
-  }
-
-  const prevSlide = () => {
-    const prevIndex = currentIndex === 0 ? children.length - 1 : currentIndex - 1
-    slideToIndex(prevIndex)
-  }
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const gsap = useGSAP()
 
   useEffect(() => {
-    if (!autoPlay) return
+    if (!isAutoPlaying || images.length <= 1) return
 
-    const timer = setInterval(nextSlide, interval)
-    return () => clearInterval(timer)
-  }, [autoPlay, interval, currentIndex])
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [images.length, isAutoPlaying])
+
+  useEffect(() => {
+    if (!carouselRef.current) return
+
+    gsap.fromTo(
+      carouselRef.current,
+      { opacity: 0, scale: 0.95 },
+      { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" },
+    )
+  }, [currentIndex, gsap])
+
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length)
+    setIsAutoPlaying(false)
+  }
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % images.length)
+    setIsAutoPlaying(false)
+  }
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index)
+    setIsAutoPlaying(false)
+  }
+
+  if (images.length === 0) {
+    return (
+      <div className={cn("aspect-video bg-muted rounded-lg flex items-center justify-center", className)}>
+        <span className="text-muted-foreground">No images available</span>
+      </div>
+    )
+  }
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl ${className}`} ref={containerRef}>
-      <div className="relative h-full">
-        {children.map((child, index) => (
-          <div
-            key={index}
-            data-slide
-            className={`absolute inset-0 transition-opacity duration-500 ${
-              index === currentIndex ? "opacity-100" : "opacity-0"
-            }`}
-            style={{ transform: index === currentIndex ? "translateX(0%)" : "translateX(100%)" }}
-          >
-            {child}
-          </div>
-        ))}
+    <div className={cn("relative group", className)}>
+      {/* Main Image */}
+      <div ref={carouselRef} className="aspect-video bg-muted rounded-lg overflow-hidden">
+        <img
+          src={images[currentIndex] || "/placeholder.svg"}
+          alt={`${alt} ${currentIndex + 1}`}
+          className="w-full h-full object-cover"
+        />
       </div>
 
-      {showArrows && (
+      {/* Navigation Arrows */}
+      {images.length > 1 && (
         <>
           <Button
             variant="ghost"
-            size="sm"
-            onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border-white/20"
-            disabled={isAnimating}
+            size="icon"
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={goToPrevious}
           >
-            ←
+            <ChevronLeft className="w-4 h-4" />
           </Button>
           <Button
             variant="ghost"
-            size="sm"
-            onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white border-white/20"
-            disabled={isAnimating}
+            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={goToNext}
           >
-            →
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </>
       )}
 
-      {showDots && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-          {children.map((_, index) => (
+      {/* Dots Indicator */}
+      {images.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+          {images.map((_, index) => (
             <button
               key={index}
-              onClick={() => slideToIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentIndex ? "bg-white scale-125" : "bg-white/50 hover:bg-white/75"
-              }`}
-              disabled={isAnimating}
+              onClick={() => goToSlide(index)}
+              className={cn(
+                "w-2 h-2 rounded-full transition-colors",
+                index === currentIndex ? "bg-white" : "bg-white/50",
+              )}
             />
           ))}
         </div>

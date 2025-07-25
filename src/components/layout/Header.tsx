@@ -1,179 +1,202 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
-import { useTheme } from "@/components/providers/ThemeProvider"
-import { Button } from "@/components/ui/Button"
-import { ToggleSwitch } from "@/components/ui/ToggleSwitch"
-import { BellIcon } from "@/components/icons/BellIcon"
-import { UserIcon } from "@/components/icons/UserIcon"
-import { MenuIcon } from "@/components/icons/MenuIcon"
-import { CloseIcon } from "@/components/icons/CloseIcon"
-import { NAVIGATION_LINKS, SITE_CONFIG } from "@/lib/constants"
-import { cn } from "@/lib/utils"
-import { useGSAP } from "@gsap/react"
-import { gsap } from "gsap"
+import { useTheme } from "next-themes"
+import { Bell, Menu, Moon, Sun, User, ShoppingCart, MessageCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ToggleSwitch } from "@/components/ui/toggle-switch"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
+import { useGSAP } from "@/components/providers/gsap-provider"
+import { api } from "@/lib/trpc/client"
+import type { HTMLHeaderElement } from "react"
+
+const NAVIGATION_LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/products", label: "Products" },
+  { href: "/farmers", label: "Farmers" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+]
 
 export function Header() {
   const { data: session } = useSession()
   const { theme, setTheme } = useTheme()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
-  const { contextSafe } = useGSAP()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const headerRef = useRef<HTMLHeaderElement>(null)
+  const gsap = useGSAP()
+
+  // Get notification count
+  const { data: notificationStats } = api.notification.getStats.useQuery(undefined, { enabled: !!session })
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
+      setIsScrolled(window.scrollY > 20)
     }
 
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const animateMenuToggle = contextSafe(() => {
-    const menu = document.querySelector(".mobile-menu")
-    if (menu) {
-      if (isMenuOpen) {
-        gsap.to(menu, {
-          opacity: 0,
-          y: -20,
-          duration: 0.3,
-          ease: "power2.in",
-          onComplete: () => setIsMenuOpen(false),
-        })
-      } else {
-        setIsMenuOpen(true)
-        gsap.fromTo(menu, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" })
-      }
-    }
-  })
+  useEffect(() => {
+    if (!headerRef.current) return
+
+    gsap.fromTo(headerRef.current, { y: -100, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" })
+  }, [gsap])
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/" })
   }
 
   return (
-    <header
-      className={cn(
-        "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
-        isScrolled ? "glass-card backdrop-blur-md shadow-lg" : "bg-transparent",
-      )}
-    >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">AC</span>
-            </div>
-            <span className="text-xl font-bold gradient-text">{SITE_CONFIG.name}</span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            {NAVIGATION_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Right Side Actions */}
-          <div className="flex items-center space-x-4">
-            {/* Theme Toggle */}
-            <ToggleSwitch
-              checked={theme === "dark"}
-              onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-              size="sm"
-            />
-
-            {session ? (
-              <>
-                {/* Notifications */}
-                <Button variant="ghost" size="icon" className="relative">
-                  <BellIcon className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary rounded-full text-xs text-white flex items-center justify-center">
-                    3
-                  </span>
-                </Button>
-
-                {/* User Menu */}
-                <div className="relative group">
-                  <Button variant="ghost" size="icon">
-                    <UserIcon className="h-5 w-5" />
-                  </Button>
-
-                  {/* Dropdown Menu */}
-                  <div className="absolute right-0 mt-2 w-48 glass-card rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                    <div className="py-2">
-                      <Link href="/dashboard" className="block px-4 py-2 text-sm hover:bg-accent rounded-md mx-2">
-                        Dashboard
-                      </Link>
-                      <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-accent rounded-md mx-2">
-                        Profile
-                      </Link>
-                      <button
-                        onClick={handleSignOut}
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-accent rounded-md mx-2"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="hidden md:flex items-center space-x-2">
-                <Button variant="ghost" asChild>
-                  <Link href="/auth/login">Sign In</Link>
-                </Button>
-                <Button variant="gradient" asChild>
-                  <Link href="/auth/register">Get Started</Link>
-                </Button>
+    <>
+      <header
+        ref={headerRef}
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+          isScrolled ? "bg-background/80 backdrop-blur-md border-b shadow-lg" : "bg-transparent"
+        }`}
+      >
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">A</span>
               </div>
-            )}
+              <span className="text-xl font-bold gradient-text">AgriConnect</span>
+            </Link>
 
-            {/* Mobile Menu Button */}
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={animateMenuToggle}>
-              {isMenuOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="mobile-menu md:hidden glass-card mt-2 rounded-lg p-4">
-            <nav className="flex flex-col space-y-4">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-8">
               {NAVIGATION_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
-                  onClick={() => setIsMenuOpen(false)}
+                  className="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium"
                 >
-                  {link.name}
+                  {link.label}
                 </Link>
               ))}
+            </nav>
 
-              {!session && (
-                <div className="flex flex-col space-y-2 pt-4 border-t border-border">
-                  <Button variant="ghost" asChild>
-                    <Link href="/auth/login">Sign In</Link>
+            {/* Right Side Actions */}
+            <div className="flex items-center space-x-4">
+              {/* Theme Toggle */}
+              <ToggleSwitch
+                checked={theme === "dark"}
+                onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                icon={theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              />
+
+              {session ? (
+                <>
+                  {/* Notifications */}
+                  <Button variant="ghost" size="sm" className="relative">
+                    <Bell className="w-5 h-5" />
+                    {notificationStats?.unreadCount && notificationStats.unreadCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 text-xs"
+                      >
+                        {notificationStats.unreadCount > 99 ? "99+" : notificationStats.unreadCount}
+                      </Badge>
+                    )}
                   </Button>
-                  <Button variant="gradient" asChild>
-                    <Link href="/auth/register">Get Started</Link>
-                  </Button>
+
+                  {/* Messages */}
+                  <Link href="/messages">
+                    <Button variant="ghost" size="sm">
+                      <MessageCircle className="w-5 h-5" />
+                    </Button>
+                  </Link>
+
+                  {/* Cart (for sellers) */}
+                  {session.user.role === "SELLER" && (
+                    <Link href="/seller/cart">
+                      <Button variant="ghost" size="sm">
+                        <ShoppingCart className="w-5 h-5" />
+                      </Button>
+                    </Link>
+                  )}
+
+                  {/* User Menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                        <User className="w-5 h-5" />
+                        <span className="hidden md:inline">{session.user.name}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard">Dashboard</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile">Profile</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Link href="/auth/login">
+                    <Button variant="ghost" size="sm">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/auth/register">
+                    <Button size="sm" className="bg-gradient-primary text-white">
+                      Get Started
+                    </Button>
+                  </Link>
                 </div>
               )}
+
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Navigation */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-background/95 backdrop-blur-md border-t">
+            <nav className="container mx-auto px-4 py-4 space-y-2">
+              {NAVIGATION_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="block py-2 text-foreground/80 hover:text-foreground transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
             </nav>
           </div>
         )}
-      </div>
-    </header>
+      </header>
+
+      {/* Spacer to prevent content from hiding behind fixed header */}
+      <div className="h-16" />
+    </>
   )
 }
