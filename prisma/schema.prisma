@@ -6,10 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL") // Crucial for migrations
-
 }
 
 enum UserRole {
@@ -19,9 +18,9 @@ enum UserRole {
 }
 
 enum FarmCapacity {
-  SMALL    // < 1 hectare
-  MEDIUM   // 1-5 hectares
-  LARGE    // > 5 hectares
+  SMALL // < 1 hectare
+  MEDIUM // 1-5 hectares
+  LARGE // > 5 hectares
 }
 
 enum ProductStatus {
@@ -76,15 +75,17 @@ model User {
 
   // Relations
   profile              Profile?
-  sentMessages         ChatMessage[]     @relation("MessageSender")
-  chatSessions1        ChatSession[]     @relation("ChatParticipant1")
-  chatSessions2        ChatSession[]     @relation("ChatParticipant2")
-  reviews              Review[]          @relation("ReviewAuthor")
+  sentMessages         ChatMessage[]  @relation("MessageSender")
+  chatSessions1        ChatSession[]  @relation("ChatParticipant1")
+  chatSessions2        ChatSession[]  @relation("ChatParticipant2")
+  reviews              Review[]       @relation("ReviewAuthor")
   notifications        Notification[]
-  ordersAsSeller       Order[]           @relation("OrderSeller")
-  ordersAsFarmer       Order[]           @relation("OrderFarmer")
+  ordersAsSeller       Order[]        @relation("OrderSeller")
+  ordersAsFarmer       Order[]        @relation("OrderFarmer")
   accounts             Account[]
   sessions             Session[]
+  cart                 Cart?
+  savedProducts        SavedProduct[]
 
   @@index([email])
   @@index([phoneNumber])
@@ -139,7 +140,7 @@ model Profile {
   profilePictureUrl String?
   contactEmail      String?
   contactPhone      String?
-  socialLinks       Json?   // JSON object for social media links
+  socialLinks       Json? // JSON object for social media links
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -153,16 +154,16 @@ model Profile {
 }
 
 model FarmerProfile {
-  id                   String       @id @default(cuid())
-  profileId            String       @unique
-  farmName             String
-  farmLocationDetails  String
-  farmCapacity         FarmCapacity
-  certifications       String[]
-  gpsCoordinates       String?
-  bio                  String?
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
+  id                  String       @id @default(cuid())
+  profileId           String       @unique
+  farmName            String
+  farmLocationDetails String
+  farmCapacity        FarmCapacity
+  certifications      String[]
+  gpsCoordinates      String?
+  bio                 String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   // Relations
   profile  Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
@@ -218,10 +219,12 @@ model Product {
   updatedAt            DateTime      @updatedAt
 
   // Relations
-  category    Category    @relation(fields: [categoryId], references: [id])
-  farmer      FarmerProfile @relation(fields: [farmerId], references: [id])
-  orderItems  OrderItem[]
-  reviews     Review[]
+  category     Category       @relation(fields: [categoryId], references: [id])
+  farmer       FarmerProfile  @relation(fields: [farmerId], references: [id])
+  orderItems   OrderItem[]
+  reviews      Review[]
+  cartItems    CartItem[]
+  savedByUsers SavedProduct[]
 
   @@index([categoryId])
   @@index([farmerId])
@@ -257,11 +260,11 @@ model Order {
 }
 
 model OrderItem {
-  id           String  @id @default(cuid())
+  id           String   @id @default(cuid())
   orderId      String
   productId    String
   quantity     Int
-  priceAtOrder Decimal @db.Decimal(10, 2)
+  priceAtOrder Decimal  @db.Decimal(10, 2)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -314,19 +317,19 @@ model ChatMessage {
 }
 
 model Review {
-  id                   String           @id @default(cuid())
-  reviewedEntityId     String
-  reviewedEntityType   ReviewEntityType
-  reviewerId           String
-  rating               Int              @db.SmallInt // 1-5 rating
-  comment              String?
-  timestamp            DateTime         @default(now())
-  isApproved           Boolean          @default(false)
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  id                 String           @id @default(cuid())
+  reviewedEntityId   String
+  reviewedEntityType ReviewEntityType
+  reviewerId         String
+  rating             Int              @db.SmallInt // 1-5 rating
+  comment            String?
+  timestamp          DateTime         @default(now())
+  isApproved         Boolean          @default(false)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   // Relations
-  reviewer User     @relation("ReviewAuthor", fields: [reviewerId], references: [id])
+  reviewer User    @relation("ReviewAuthor", fields: [reviewerId], references: [id])
   product  Product? @relation(fields: [reviewedEntityId], references: [id])
 
   @@index([reviewedEntityId])
@@ -336,16 +339,16 @@ model Review {
 }
 
 model Notification {
-  id                String           @id @default(cuid())
-  userId            String
-  type              NotificationType
-  content           String
-  isRead            Boolean          @default(false)
-  timestamp         DateTime         @default(now())
-  link              String?
-  relatedEntityId   String?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  id              String           @id @default(cuid())
+  userId          String
+  type            NotificationType
+  content         String
+  isRead          Boolean          @default(false)
+  timestamp       DateTime         @default(now())
+  link            String?
+  relatedEntityId String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -354,4 +357,41 @@ model Notification {
   @@index([isRead])
   @@index([timestamp])
   @@map("notifications")
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+model SavedProduct {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("saved_products")
 }
