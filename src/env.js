@@ -1,9 +1,6 @@
 import { createEnv } from "@t3-oss/env-nextjs"
 import { z } from "zod"
 
-
-
-
 export const env = createEnv({
   server: {
     DATABASE_URL: z.string().url(),
@@ -18,10 +15,12 @@ export const env = createEnv({
     CLOUDINARY_API_SECRET: z.string().min(1),
     PAYMENT_GATEWAY_API_KEY: z.string().min(1),
     PAYMENT_GATEWAY_SECRET: z.string().min(1),
-    SMS_GATEWAY_API_KEY: z.string().min(1),
-    EMAIL_API_KEY: z.string().min(1).optional(),
-    EMAIL_FROM: z.string().email().optional(),
-    EMAIL_FROM_NAME: z.string().optional(),
+    EMAIL_FROM: z.string().email(),
+    EMAIL_FROM_NAME: z.string(),
+    SMTP_HOST: z.string().min(1),
+    SMTP_PORT: z.coerce.number(),
+    SMTP_USER: z.string().min(1),
+    SMTP_PASS: z.string().min(1),
   },
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
@@ -36,10 +35,12 @@ export const env = createEnv({
     CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
     PAYMENT_GATEWAY_API_KEY: process.env.PAYMENT_GATEWAY_API_KEY,
     PAYMENT_GATEWAY_SECRET: process.env.PAYMENT_GATEWAY_SECRET,
-    SMS_GATEWAY_API_KEY: process.env.SMS_GATEWAY_API_KEY,
-    EMAIL_API_KEY: process.env.EMAIL_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
     EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME,
+    SMTP_HOST: process.env.SMTP_HOST,
+    SMTP_PORT: process.env.SMTP_PORT,
+    SMTP_USER: process.env.SMTP_USER,
+    SMTP_PASS: process.env.SMTP_PASS,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 })

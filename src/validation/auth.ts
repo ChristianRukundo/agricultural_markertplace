@@ -16,9 +16,12 @@ export const registerSchema = z
     role: z.enum(["FARMER", "SELLER"]),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: "Passwords do not match",
     path: ["confirmPassword"],
   })
+
+// Client-side schema for the form, including confirmPassword
+export const registerFormSchema = registerSchema
 
 export const verifyPhoneSchema = z.object({
   phoneNumber: phoneNumberSchema,

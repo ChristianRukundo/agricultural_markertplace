@@ -8,6 +8,7 @@ import { useEffect } from "react"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { PageTransitionOverlay } from "@/components/animations/page-transition-overlay"
+import { FullScreenLoader } from "@/components/ui/loader"
 
 export default function ProtectedLayout({
   children,
@@ -28,9 +29,7 @@ export default function ProtectedLayout({
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
+      <FullScreenLoader />
     )
   }
 

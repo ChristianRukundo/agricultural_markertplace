@@ -1,274 +1,287 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Mail,
+  Lock,
+  User,
+  Phone,
+  Eye,
+  EyeOff,
+  UserCheck,
+  ShoppingBag,
+} from "lucide-react";
+import { useGSAP } from "@/components/providers/gsap-provider";
+import { registerFormSchema } from "@/validation/auth";
+import { api } from "@/lib/trpc/client";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Eye, EyeOff, Mail, Lock, User, Phone, UserCheck } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { FadeIn } from "@/components/animations/fade-in"
-import { useToast } from "@/hooks/use-toast"
-import { api } from "@/lib/trpc/client"
+type RegisterFormData = z.infer<typeof registerFormSchema>;
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phoneNumber: "",
-    password: "",
-    confirmPassword: "",
-    role: "SELLER" as "FARMER" | "SELLER",
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const router = useRouter()
-  const { toast } = useToast()
+  const router = useRouter();
+  const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const gsap = useGSAP();
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerFormSchema),
+    defaultValues: {
+      role: "SELLER",
+    },
+  });
+
+  const selectedRole = watch("role");
 
   const registerMutation = api.auth.register.useMutation({
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast({
         title: "Account Created!",
-        description: "Please verify your phone number to complete registration.",
-      })
-      router.push(`/auth/verify-phone?phone=${encodeURIComponent(formData.phoneNumber)}`)
+        description: "Please check your email to verify your account.",
+      });
+
+      router.push("/auth/login");
     },
     onError: (error) => {
       toast({
         title: "Registration Failed",
-        description: error.message || "Failed to create account. Please try again.",
+        description: error.message,
         variant: "destructive",
-      })
+      });
     },
-  })
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  useEffect(() => {
+    const tl = gsap.timeline();
+    tl.fromTo(
+      ".auth-illustration-panel",
+      { opacity: 0, x: 100 },
+      { opacity: 1, x: 0, duration: 0.8, ease: "power2.out" }
+    )
+      .fromTo(
+        ".auth-form-panel",
+        { opacity: 0, x: -100 },
+        { opacity: 1, x: 0, duration: 0.8, ease: "power2.out" },
+        "-=0.6"
+      )
+      .fromTo(
+        ".form-element",
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: "power2.out" },
+        "-=0.3"
+      );
+  }, [gsap]);
 
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match. Please try again.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (formData.password.length < 8) {
-      toast({
-        title: "Weak Password",
-        description: "Password must be at least 8 characters long.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    registerMutation.mutate({
-      name: formData.name,
-      email: formData.email,
-      phoneNumber: formData.phoneNumber,
-      password: formData.password,
-      role: formData.role,
-    })
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }))
-  }
+  const onSubmit = (data: RegisterFormData) => {
+    registerMutation.mutate(data);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-yellow-50 dark:from-green-950 dark:via-blue-950 dark:to-yellow-950 flex items-center justify-center p-4">
-      <FadeIn>
-        <Card className="glassmorphism w-full max-w-md p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-2xl">A</span>
-            </div>
-            <h1 className="text-3xl font-bold mb-2">Join AgriConnect</h1>
-            <p className="text-muted-foreground">Create your account to get started</p>
-          </div>
-
-          {/* Role Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium mb-3">I want to join as:</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, role: "FARMER" }))}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  formData.role === "FARMER" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"
-                }`}
-              >
-                <UserCheck className="w-6 h-6 mx-auto mb-2 text-primary" />
-                <div className="text-sm font-medium">Farmer</div>
-                <div className="text-xs text-muted-foreground">Sell your produce</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, role: "SELLER" }))}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  formData.role === "SELLER" ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"
-                }`}
-              >
-                <User className="w-6 h-6 mx-auto mb-2 text-primary" />
-                <div className="text-sm font-medium">Seller</div>
-                <div className="text-xs text-muted-foreground">Buy from farmers</div>
-              </button>
-            </div>
-          </div>
-
-          {/* Registration Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-2">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Your full name"
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="your@email.com"
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="phoneNumber" className="block text-sm font-medium mb-2">
-                Phone Number
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  type="tel"
-                  required
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  placeholder="+250 788 123 456"
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="Create a strong password"
-                  className="pl-10 pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  placeholder="Confirm your password"
-                  className="pl-10 pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-2">
-              <input type="checkbox" id="terms" required className="mt-1" />
-              <label htmlFor="terms" className="text-sm text-muted-foreground">
-                I agree to the{" "}
-                <Link href="/terms" className="text-primary hover:underline">
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link href="/privacy" className="text-primary hover:underline">
-                  Privacy Policy
-                </Link>
-              </label>
-            </div>
-
-            <Button
-              type="submit"
-              size="lg"
-              disabled={registerMutation.isPending}
-              className="w-full bg-gradient-primary text-white"
-            >
-              {registerMutation.isPending ? "Creating Account..." : "Create Account"}
-            </Button>
-          </form>
-
-          {/* Sign In Link */}
-          <div className="text-center mt-6">
-            <p className="text-muted-foreground">
+    <main
+      ref={containerRef}
+      className="min-h-screen w-full flex bg-gray-50 dark:bg-gray-900"
+    >
+      {/* Form Panel */}
+      <div className="auth-form-panel w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
+        <div className="w-full max-w-md">
+          <div className="text-left mb-10">
+            <h1 className="form-element text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              Create Account
+            </h1>
+            <p className="form-element text-gray-500 dark:text-gray-400">
               Already have an account?{" "}
-              <Link href="/auth/login" className="text-primary hover:underline font-medium">
+              <Link
+                href="/auth/login"
+                className="font-medium text-primary hover:underline"
+              >
                 Sign in
               </Link>
             </p>
           </div>
-        </Card>
-      </FadeIn>
-    </div>
-  )
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Role Selection */}
+            <div className="form-element">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                I am a...
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setValue("role", "FARMER")}
+                  className={cn(
+                    "flex flex-col items-center p-4 rounded-lg border-2 transition-all duration-200",
+                    selectedRole === "FARMER"
+                      ? "border-primary bg-primary/10"
+                      : "border-gray-200 dark:border-gray-700 hover:border-primary/50"
+                  )}
+                >
+                  <UserCheck className="w-6 h-6 mb-1 text-primary" />
+                  <span className="text-sm font-medium">Farmer</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setValue("role", "SELLER")}
+                  className={cn(
+                    "flex flex-col items-center p-4 rounded-lg border-2 transition-all duration-200",
+                    selectedRole === "SELLER"
+                      ? "border-primary bg-primary/10"
+                      : "border-gray-200 dark:border-gray-700 hover:border-primary/50"
+                  )}
+                >
+                  <ShoppingBag className="w-6 h-6 mb-1 text-primary" />
+                  <span className="text-sm font-medium">Seller</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Input fields */}
+            {[
+              {
+                id: "name",
+                type: "text",
+                placeholder: "John Doe",
+                icon: User,
+                label: "Full Name",
+              },
+              {
+                id: "email",
+                type: "email",
+                placeholder: "your.email@example.com",
+                icon: Mail,
+                label: "Email Address",
+              },
+              {
+                id: "phoneNumber",
+                type: "tel",
+                placeholder: "+250 788 123 456",
+                icon: Phone,
+                label: "Phone Number",
+              },
+              {
+                id: "password",
+                type: showPassword ? "text" : "password",
+                placeholder: "••••••••",
+                icon: Lock,
+                label: "Password",
+                toggle: () => setShowPassword(!showPassword),
+                show: showPassword,
+              },
+              {
+                id: "confirmPassword",
+                type: showConfirmPassword ? "text" : "password",
+                placeholder: "••••••••",
+                icon: Lock,
+                label: "Confirm Password",
+                toggle: () => setShowConfirmPassword(!showConfirmPassword),
+                show: showConfirmPassword,
+              },
+            ].map((field) => (
+              <div className="form-element" key={field.id}>
+                <label
+                  htmlFor={field.id}
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
+                  {field.label}
+                </label>
+                <div className="relative">
+                  <field.icon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    id={field.id}
+                    type={field.type}
+                    {...register(field.id as keyof RegisterFormData)}
+                    placeholder={field.placeholder}
+                    className={cn(
+                      "w-full pl-12 pr-4 py-3 bg-gray-100 dark:bg-gray-800 border rounded-lg focus:outline-none focus:ring-2 transition-all",
+                      errors[field.id as keyof RegisterFormData]
+                        ? "border-red-500 focus:ring-red-500/50"
+                        : "border-gray-200 dark:border-gray-700 focus:ring-primary/50 focus:border-primary",
+                      field.toggle && "pr-12"
+                    )}
+                    disabled={isSubmitting || registerMutation.isPending}
+                  />
+                  {field.toggle && (
+                    <button
+                      type="button"
+                      onClick={field.toggle}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {field.show ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  )}
+                </div>
+                {errors[field.id as keyof RegisterFormData] && (
+                  <p className="mt-2 text-xs text-red-500">
+                    {errors[field.id as keyof RegisterFormData]?.message}
+                  </p>
+                )}
+              </div>
+            ))}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isSubmitting || registerMutation.isPending}
+              className="form-element w-full py-3 px-4 text-white font-semibold rounded-lg bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-300 flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed mt-6"
+            >
+              {isSubmitting || registerMutation.isPending ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                "Create Account"
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* Illustration Panel */}
+      <div className="auth-illustration-panel hidden lg:flex w-1/2 items-center justify-center p-12 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 relative overflow-hidden">
+        <div className="text-center z-10">
+          <Link
+            href="/"
+            className="flex items-center justify-center space-x-3 mb-8"
+          >
+            <div className="w-12 h-12 bg-white/90 dark:bg-gray-800/90 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-2xl font-bold gradient-text">A</span>
+            </div>
+            <span className="text-3xl font-bold text-gray-800 dark:text-white">
+              AgriConnect
+            </span>
+          </Link>
+          <p className="text-xl max-w-sm mx-auto text-gray-600 dark:text-gray-300">
+            Join a thriving community connecting farmers and sellers across
+            Rwanda.
+          </p>
+        </div>
+        {/* Decorative Shapes */}
+        <div className="absolute -top-16 -right-16 w-64 h-64 bg-primary/10 rounded-full opacity-50 animate-float" />
+        <div
+          className="absolute -bottom-24 -left-10 w-72 h-72 bg-blue-500/10 rounded-full opacity-50 animate-float"
+          style={{ animationDelay: "3s" }}
+        />
+      </div>
+    </main>
+  );
 }

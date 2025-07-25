@@ -1,3 +1,4 @@
+import nodemailer from "nodemailer"
 import { env } from "@/env.js"
 
 interface SendEmailParams {
@@ -13,72 +14,36 @@ interface EmailResponse {
   error?: string
 }
 
-/**
- * Email service for sending transactional emails
- * TODO: Replace with actual email service provider (SendGrid, Mailgun, etc.)
- */
 export class EmailService {
-  private apiKey: string
-  private fromEmail: string
-  private fromName: string
+  private transporter: nodemailer.Transporter
 
   constructor() {
-    this.apiKey = process.env.EMAIL_API_KEY || ""
-    this.fromEmail = process.env.EMAIL_FROM || "noreply@agriconnect.rw"
-    this.fromName = process.env.EMAIL_FROM_NAME || "AgriConnect Rwanda"
+    this.transporter = nodemailer.createTransport({
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      secure: env.SMTP_PORT === 465, 
+      auth: {
+        user: env.SMTP_USER,
+        pass: env.SMTP_PASS,
+      },
+    })
   }
 
-  /**
-   * Send email using email service provider
-   */
   async sendEmail({ to, subject, html, text }: SendEmailParams): Promise<EmailResponse> {
+    const mailOptions = {
+      from: `"${env.EMAIL_FROM_NAME || "AgriConnect Rwanda"}" <${env.EMAIL_FROM}>`,
+      to,
+      subject,
+      html,
+      text,
+    }
+
     try {
-      // TODO: Implement actual email service API call
-      // Example implementation for SendGrid:
-      /*
-      const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          personalizations: [{
-            to: [{ email: to }],
-            subject,
-          }],
-          from: {
-            email: this.fromEmail,
-            name: this.fromName,
-          },
-          content: [
-            {
-              type: 'text/html',
-              value: html,
-            },
-            ...(text ? [{
-              type: 'text/plain',
-              value: text,
-            }] : []),
-          ],
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Email API error: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      */
-
-      // For development, just log the email
-      if (env.NODE_ENV === "development") {
-        console.log("📧 Email would be sent:", { to, subject, html })
-      }
-
+      const info = await this.transporter.sendMail(mailOptions)
+      console.log("Message sent: %s", info.messageId)
       return {
         success: true,
-        messageId: `mock-${Date.now()}`,
+        messageId: info.messageId,
       }
     } catch (error) {
       console.error("Email sending error:", error)

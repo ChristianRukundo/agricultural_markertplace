@@ -65,7 +65,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         try {
           const { email, password } = loginSchema.parse(credentials)
 
@@ -87,7 +87,7 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             email: user.email,
             role: user.role,
-            phoneNumber: user.phoneNumber,
+            phoneNumber: user.phoneNumber ?? undefined,
             isVerified: user.isVerified,
           }
         } catch {
@@ -101,7 +101,6 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/auth/signin",
-    signUp: "/auth/signup",
   },
 }
 

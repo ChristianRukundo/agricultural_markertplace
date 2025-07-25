@@ -15,6 +15,9 @@ import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll"
 import { useGSAP } from "@/components/providers/gsap-provider"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/trpc/client"
+import { useSession } from "next-auth/react"
+import { FullScreenLoader } from "@/components/ui/loader"
+import { useRouter } from "next/navigation"
 
 const FEATURES = [
   {
@@ -82,18 +85,21 @@ export default function HomePage() {
   const [email, setEmail] = useState("")
   const gsap = useGSAP()
   const { toast } = useToast()
-
-  // Fetch featured products with loading state
   const { data: productsData, isLoading: productsLoading } = api.product.getProducts.useQuery({
     page: 1,
     limit: 6,
     sortBy: "createdAt",
     sortOrder: "desc",
   })
+  const router = useRouter()
+  const { status } = useSession()
 
- 
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard")
+    }
+  }, [status, router])
 
-  // Newsletter signup mutation
   const newsletterMutation = api.newsletter.subscribe.useMutation({
     onSuccess: () => {
       toast({
@@ -114,6 +120,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!heroRef.current) return
 
+    if (!gsap) return
     const tl = gsap.timeline()
 
     tl.fromTo(".hero-title", { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" })
@@ -126,6 +133,10 @@ export default function HomePage() {
       )
       .fromTo(".hero-video", { opacity: 0, x: 50 }, { opacity: 1, x: 0, duration: 0.6, ease: "power2.out" }, "-=0.3")
   }, [gsap])
+
+  if (status === "loading" || status === "authenticated") {
+    return <FullScreenLoader />
+  }
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault()
