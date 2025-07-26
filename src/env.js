@@ -21,6 +21,7 @@ export const env = createEnv({
     SMTP_PORT: z.coerce.number(),
     SMTP_USER: z.string().min(1),
     SMTP_PASS: z.string().min(1),
+    SMS_GATEWAY_API_KEY : z.string().min(1),
   },
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
@@ -41,6 +42,7 @@ export const env = createEnv({
     SMTP_PORT: process.env.SMTP_PORT,
     SMTP_USER: process.env.SMTP_USER,
     SMTP_PASS: process.env.SMTP_PASS,
+    SMS_GATEWAY_API_KEY: process.env.SMS_GATEWAY_API_KEY,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 })

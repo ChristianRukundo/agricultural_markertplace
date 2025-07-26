@@ -25,7 +25,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { useGSAP } from "@/components/providers/gsap-provider";
 import { api } from "@/lib/trpc/client";
-import type { HTMLHeaderElement } from "react";
+
 
 const NAVIGATION_LINKS = [
   { href: "/", label: "Home" },
@@ -40,7 +40,7 @@ export function Header() {
   const { theme, setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const headerRef = useRef<HTMLHeaderElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
   const gsap = useGSAP();
 
   // Get notification count
