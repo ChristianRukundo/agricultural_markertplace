@@ -1,40 +1,38 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import { Sidebar } from "@/components/layout/sidebar"
-import { Header } from "@/components/layout/header"
-import { PageTransitionOverlay } from "@/components/animations/page-transition-overlay"
-import { FullScreenLoader } from "@/components/ui/loader"
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/Header";
+import { PageTransitionOverlay } from "@/components/animations/page-transition-overlay";
+import { FullScreenLoader } from "@/components/ui/loader";
 
 export default function ProtectedLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const { data: session, status } = useSession()
-  const router = useRouter()
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
-    if (status === "loading") return // Still loading
+    if (status === "loading") return; // Still loading
 
     if (!session) {
-      router.push("/auth/login")
-      return
+      router.push("/auth/login");
+      return;
     }
-  }, [session, status, router])
+  }, [session, status, router]);
 
   if (status === "loading") {
-    return (
-      <FullScreenLoader />
-    )
+    return <FullScreenLoader />;
   }
 
   if (!session) {
-    return null
+    return null;
   }
 
   return (
@@ -46,5 +44,5 @@ export default function ProtectedLayout({
       </div>
       <PageTransitionOverlay />
     </div>
-  )
+  );
 }

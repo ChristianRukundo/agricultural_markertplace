@@ -1,6 +1,6 @@
 import type React from "react";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 import { PageTransitionOverlay } from "@/components/animations/page-transition-overlay";
 
 export default function PublicLayout({
