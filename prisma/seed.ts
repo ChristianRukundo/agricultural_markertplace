@@ -195,6 +195,7 @@ async function main() {
 
   for (let i = 0; i < productData.length; i++) {
     const productInfo = productData[i]
+    if (!productInfo) continue
     const category = categories.find((c) => c.name === productInfo.category)
     const farmer = farmers[i % farmers.length]
 
