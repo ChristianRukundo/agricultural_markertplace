@@ -95,7 +95,7 @@ export class RateLimiter {
    * Prioritizes user ID if available, otherwise falls back to IP address.
    * @param req The NextRequest object.
    * @param userId Optional user ID from the session.
-   * @returns A string identifier.
+  * @returns A string identifier.
    */
   getIdentifier(req: NextRequest, userId?: string): string {
     if (userId) {
