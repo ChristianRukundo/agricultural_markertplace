@@ -30,8 +30,24 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/trpc/client";
+import { ComponentType } from "react";
 
-const NAVIGATION_ITEMS = {
+type NavigationChild = {
+  href: string;
+  label: string;
+  description?: string;
+};
+
+type NavigationItem = {
+  href?: string;
+  label: string;
+  icon?: ComponentType<any>;
+  description?: string;
+  children?: NavigationChild[];
+  badge?: string;
+};
+
+const NAVIGATION_ITEMS: Record<string, NavigationItem[]> = {
   FARMER: [
     {
       href: "/dashboard",
@@ -232,7 +248,6 @@ export function Sidebar() {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
-  // Get notification count
   const { data: notificationStats } = api.notification.getStats.useQuery(
     undefined,
     {
@@ -242,8 +257,9 @@ export function Sidebar() {
 
   if (!session) return null;
 
-  const userRole = session.user.role as keyof typeof NAVIGATION_ITEMS;
-  const navigationItems = NAVIGATION_ITEMS[userRole] || NAVIGATION_ITEMS.SELLER;
+  // FIX 1: Provide an empty array as a fallback to satisfy the NavigationItem[] type.
+  const navigationItems: NavigationItem[] =
+    NAVIGATION_ITEMS[session.user.role as keyof typeof NAVIGATION_ITEMS] ?? [];
 
   const toggleExpanded = (label: string) => {
     setExpandedItems((prev) =>
@@ -266,6 +282,7 @@ export function Sidebar() {
     switch (href) {
       case "/notifications":
         return notificationStats?.unreadCount || 0;
+      // You can add other cases here for dynamic badges
       case "/messages":
         return 2; // Mock data
       case "/farmer/orders":
@@ -279,7 +296,6 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile Overlay */}
       {!isCollapsed && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -294,18 +310,13 @@ export function Sidebar() {
         )}
       >
         <div className="flex flex-col h-full">
-          {/* Header */}
           <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between">
               {!isCollapsed && (
                 <div>
                   <h2 className="font-semibold text-lg">Navigation</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {session.user.role === "FARMER"
-                      ? "Farmer Dashboard"
-                      : session.user.role === "SELLER"
-                      ? "Seller Dashboard"
-                      : "Admin Dashboard"}
+                  <p className="text-sm text-muted-foreground capitalize">
+                    {session.user.role.toLowerCase()} Dashboard
                   </p>
                 </div>
               )}
@@ -332,7 +343,6 @@ export function Sidebar() {
             </div>
           </div>
 
-          {/* Search */}
           {!isCollapsed && (
             <div className="p-4 border-b border-border">
               <div className="relative">
@@ -347,10 +357,8 @@ export function Sidebar() {
             </div>
           )}
 
-          {/* Navigation */}
           <div className="flex-1 overflow-y-auto p-4">
             <nav className="space-y-2">
-              {/* Quick Actions */}
               {!isCollapsed && (
                 <div className="mb-6">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
@@ -386,7 +394,6 @@ export function Sidebar() {
                 </div>
               )}
 
-              {/* Main Navigation */}
               <div>
                 {!isCollapsed && (
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
@@ -395,9 +402,8 @@ export function Sidebar() {
                 )}
 
                 {filteredItems.map((item) => {
-                  const isActive = pathname === item.href;
+                  const Icon = item.icon; // FIX 2: Alias component to a capitalized variable
                   const isExpanded = expandedItems.includes(item.label);
-                  const badgeCount = item.href ? getBadgeCount(item.href) : 0;
 
                   if (item.children) {
                     return (
@@ -411,7 +417,8 @@ export function Sidebar() {
                           )}
                         >
                           <div className="flex items-center space-x-3">
-                            <item.icon className="w-5 h-5 flex-shrink-0" />
+                            {/* FIX 3: Conditionally render the icon */}
+                            {Icon && <Icon className="w-5 h-5 flex-shrink-0" />}
                             {!isCollapsed && <span>{item.label}</span>}
                           </div>
                           {!isCollapsed && (
@@ -424,7 +431,6 @@ export function Sidebar() {
                           )}
                         </button>
 
-                        {/* Submenu */}
                         {!isCollapsed && isExpanded && (
                           <div className="ml-6 mt-1 space-y-1">
                             {item.children.map((child) => {
@@ -458,6 +464,9 @@ export function Sidebar() {
                     );
                   }
 
+                  const isActive = pathname === item.href;
+                  const badgeCount = item.href ? getBadgeCount(item.href) : 0;
+
                   return (
                     <Link
                       key={item.href}
@@ -472,7 +481,8 @@ export function Sidebar() {
                       title={isCollapsed ? item.label : undefined}
                     >
                       <div className="flex items-center space-x-3">
-                        <item.icon className="w-5 h-5 flex-shrink-0" />
+                        {/* FIX 4: Conditionally render the icon */}
+                        {Icon && <Icon className="w-5 h-5 flex-shrink-0" />}
                         {!isCollapsed && (
                           <div className="flex-1">
                             <div>{item.label}</div>
@@ -497,7 +507,6 @@ export function Sidebar() {
             </nav>
           </div>
 
-          {/* Footer */}
           <div className="p-4 border-t border-border">
             {!isCollapsed ? (
               <div className="space-y-2">
@@ -508,7 +517,6 @@ export function Sidebar() {
                   <HelpCircle className="w-4 h-4" />
                   <span>Help & Support</span>
                 </Link>
-
                 <div className="flex items-center space-x-3 px-3 py-2">
                   <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-medium text-sm">
@@ -543,7 +551,6 @@ export function Sidebar() {
         </div>
       </aside>
 
-      {/* Mobile Toggle Button */}
       <Button
         variant="ghost"
         size="sm"
@@ -556,7 +563,6 @@ export function Sidebar() {
         <Menu className="w-4 h-4" />
       </Button>
 
-      {/* Spacer to prevent content from hiding behind sidebar */}
       <div
         className={cn(
           "transition-all duration-300 lg:block hidden",

@@ -1,10 +1,17 @@
 "use client";
 
-import React from "react";
-
-import { useState } from "react";
+import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useSession } from "next-auth/react";
-import { Camera, Save, Phone, Mail, User, Building } from "lucide-react";
+import {
+  Camera,
+  Save,
+  Phone,
+  Mail,
+  User,
+  Building,
+  Leaf,
+  Package,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -14,6 +21,29 @@ import { FadeIn } from "@/components/animations/fade-in";
 import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/trpc/client";
+import { FarmCapacity } from "@prisma/client"; // Assuming this is available, or use string literals
+
+// Define a type for the form data for better type safety
+type ProfileFormData = {
+  name: string;
+  description: string;
+  contactPhone: string;
+  contactEmail: string;
+  location: {
+    district: string;
+    province: string;
+    sector: string;
+    address?: string;
+  } | null;
+  // Farmer specific
+  specializations: string[]; // Maps to 'certifications' on the backend
+  farmName: string;
+  farmLocationDetails: string;
+  farmCapacity: FarmCapacity;
+  // Seller specific
+  businessName: string;
+  deliveryOptions: string[];
+};
 
 export default function ProfilePage() {
   const { data: session } = useSession();
@@ -21,40 +51,60 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
 
   // Fetch user profile
-  const { data: profile, refetch } = api.user.getProfile.useQuery();
+  const {
+    data: profile,
+    refetch,
+    isLoading: isProfileLoading,
+  } = api.user.getProfile.useQuery(undefined, {
+    enabled: !!session, // Only fetch if session exists
+  });
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProfileFormData>({
     name: "",
     description: "",
     contactPhone: "",
     contactEmail: "",
-    location: null as any,
-    specializations: [] as string[],
+    location: null,
+    specializations: [],
+    farmName: "",
+    farmLocationDetails: "",
+    farmCapacity: "SMALL",
     businessName: "",
-    businessType: "",
+    deliveryOptions: [],
   });
 
-  // Update profile mutation
-  const updateProfileMutation = api.user.updateProfile.useMutation({
-    onSuccess: () => {
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
-      });
-      setIsEditing(false);
-      refetch();
-    },
-    onError: (error) => {
-      toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update profile.",
-        variant: "destructive",
-      });
-    },
-  });
+  // Centralized mutation handling
+  const handleMutationSuccess = (title: string) => {
+    toast({
+      title,
+      description: "Your profile has been successfully updated.",
+    });
+    refetch();
+  };
+
+  const handleMutationError = (error: any) => {
+    toast({
+      title: "Update Failed",
+      description: error.message || "An unexpected error occurred.",
+      variant: "destructive",
+    });
+  };
+
+  // Define all necessary mutations
+  const updateProfileMutation = api.user.updateProfile.useMutation();
+  const updateFarmerProfileMutation =
+    api.user.updateFarmerProfile.useMutation();
+  const updateSellerProfileMutation =
+    api.user.updateSellerProfile.useMutation();
+
+  // Combined loading state for all mutations
+  const isUpdating =
+    updateProfileMutation.isPending ||
+    updateFarmerProfileMutation.isPending ||
+    updateSellerProfileMutation.isPending;
 
   // Initialize form data when profile loads
-  React.useEffect(() => {
+  useEffect(() => {
     if (profile) {
       setFormData({
         name: profile.name || "",
@@ -62,60 +112,112 @@ export default function ProfilePage() {
         contactPhone: profile.contactPhone || "",
         contactEmail: profile.contactEmail || "",
         location: profile.location ? JSON.parse(profile.location) : null,
-        specializations: profile.specializations
-          ? JSON.parse(profile.specializations)
-          : [],
-        businessName: profile.businessName || "",
-        businessType: profile.businessType || "",
+        // Farmer-specific fields (from nested farmerProfile)
+        specializations: profile.farmerProfile?.certifications || [],
+        farmName: profile.farmerProfile?.farmName || "",
+        farmLocationDetails: profile.farmerProfile?.farmLocationDetails || "",
+        farmCapacity: profile.farmerProfile?.farmCapacity || "SMALL",
+        // Seller-specific fields (from nested sellerProfile)
+        businessName: profile.sellerProfile?.businessName || "",
+        deliveryOptions: profile.sellerProfile?.deliveryOptions || [],
       });
     }
   }, [profile]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    updateProfileMutation.mutate({
-      ...formData,
-      location: formData.location ? JSON.stringify(formData.location) : null,
-      specializations: JSON.stringify(formData.specializations),
-    });
+
+    if (!session) {
+      toast({
+        title: "Not Authenticated",
+        description: "You must be logged in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const mutationPromises = [];
+
+    // 1. Update base profile
+    mutationPromises.push(
+      updateProfileMutation.mutateAsync({
+        name: formData.name,
+        description: formData.description,
+        contactPhone: formData.contactPhone,
+        contactEmail: formData.contactEmail,
+        location: formData.location ?? undefined, // Pass object directly, handle null
+      })
+    );
+
+    // 2. Conditionally update role-specific profile
+    if (session.user.role === "FARMER") {
+      mutationPromises.push(
+        updateFarmerProfileMutation.mutateAsync({
+          farmName: formData.farmName,
+          farmLocationDetails: formData.farmLocationDetails,
+          farmCapacity: formData.farmCapacity,
+          certifications: formData.specializations,
+          bio: formData.description,
+        })
+      );
+    } else if (session.user.role === "SELLER") {
+      mutationPromises.push(
+        updateSellerProfileMutation.mutateAsync({
+          businessName: formData.businessName,
+          deliveryOptions: formData.deliveryOptions,
+        })
+      );
+    }
+
+    try {
+      await Promise.all(mutationPromises);
+      handleMutationSuccess("Profile Updated");
+      setIsEditing(false);
+    } catch (error) {
+      handleMutationError(error);
+    }
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const addSpecialization = (spec: string) => {
-    if (spec && !formData.specializations.includes(spec)) {
+  const addToArrayField = (field: keyof ProfileFormData, value: string) => {
+    if (
+      value &&
+      Array.isArray(formData[field]) &&
+      !(formData[field] as string[]).includes(value)
+    ) {
       setFormData((prev) => ({
         ...prev,
-        specializations: [...prev.specializations, spec],
+        [field]: [...(prev[field] as string[]), value],
       }));
     }
   };
 
-  const removeSpecialization = (spec: string) => {
+  const removeFromArrayField = (
+    field: keyof ProfileFormData,
+    value: string
+  ) => {
     setFormData((prev) => ({
       ...prev,
-      specializations: prev.specializations.filter((s) => s !== spec),
+      [field]: (prev[field] as string[]).filter((item) => item !== value),
     }));
   };
 
-  if (!session) return null;
+  if (isProfileLoading) return <div>Loading profile...</div>;
+  if (!session) return <div>Access Denied. Please log in.</div>;
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <FadeIn>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Profile Settings</h1>
             <p className="text-muted-foreground">
-              Manage your account information and preferences
+              Manage your account information
             </p>
           </div>
           <Button
@@ -128,225 +230,154 @@ export default function ProfilePage() {
       </FadeIn>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Profile Picture & Basic Info */}
         <SlideInOnScroll direction="left">
           <Card className="glassmorphism">
-            <CardContent className="p-6">
-              <div className="text-center">
-                {/* Avatar */}
-                <div className="relative inline-block mb-4">
-                  <div className="w-32 h-32 bg-gradient-primary rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-4xl">
-                      {formData.name?.charAt(0) ||
-                        session.user.name?.charAt(0) ||
-                        "U"}
-                    </span>
-                  </div>
-                  {isEditing && (
-                    <Button
-                      size="sm"
-                      className="absolute bottom-0 right-0 rounded-full w-10 h-10 p-0"
-                    >
-                      <Camera className="w-4 h-4" />
-                    </Button>
-                  )}
+            <CardContent className="p-6 text-center">
+              <div className="relative inline-block mb-4">
+                <div className="w-32 h-32 bg-gradient-primary rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-4xl">
+                    {formData.name?.charAt(0) ||
+                      session.user.name?.charAt(0) ||
+                      "U"}
+                  </span>
                 </div>
-
-                <h2 className="text-2xl font-bold mb-2">
-                  {formData.name || session.user.name || "User"}
-                </h2>
-                <p className="text-muted-foreground mb-4">
-                  {session.user.role === "FARMER"
-                    ? "Farmer"
-                    : session.user.role === "SELLER"
-                    ? "Seller"
-                    : "Admin"}
-                </p>
-
-                {/* Quick Stats */}
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">
-                      {session.user.role === "FARMER" ? "12" : "8"}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {session.user.role === "FARMER" ? "Products" : "Orders"}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">4.8</div>
-                    <div className="text-sm text-muted-foreground">Rating</div>
-                  </div>
-                </div>
+                {isEditing && (
+                  <Button
+                    size="sm"
+                    className="absolute bottom-0 right-0 rounded-full w-10 h-10 p-0"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
+              <h2 className="text-2xl font-bold mb-2">
+                {formData.name || session.user.name || "User"}
+              </h2>
+              <p className="text-muted-foreground mb-4 capitalize">
+                {session.user.role.toLowerCase()}
+              </p>
             </CardContent>
           </Card>
         </SlideInOnScroll>
 
-        {/* Profile Form */}
         <div className="lg:col-span-2 space-y-6">
           <SlideInOnScroll direction="right">
-            <Card className="glassmorphism">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <User className="w-5 h-5 mr-2" />
-                  Personal Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <Card className="glassmorphism">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <User className="w-5 h-5 mr-2" />
+                    Personal Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Full Name
-                      </label>
-                      <Input
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        placeholder="Your full name"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Email
-                      </label>
-                      <Input
-                        value={session.user.email || ""}
-                        disabled
-                        className="bg-muted"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Description
-                    </label>
-                    <Textarea
-                      name="description"
-                      value={formData.description}
+                    <Input
+                      name="name"
+                      value={formData.name}
                       onChange={handleInputChange}
                       disabled={!isEditing}
-                      rows={4}
-                      placeholder="Tell us about yourself..."
+                      placeholder="Your full name"
+                      aria-label="Full Name"
+                    />
+                    <Input
+                      value={session.user.email || ""}
+                      disabled
+                      className="bg-muted"
+                      aria-label="Email"
                     />
                   </div>
-
+                  <Textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    rows={4}
+                    placeholder="Tell us about yourself..."
+                    aria-label="Description"
+                  />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Phone Number
-                      </label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                        <Input
-                          name="contactPhone"
-                          value={formData.contactPhone}
-                          onChange={handleInputChange}
-                          disabled={!isEditing}
-                          placeholder="+250 788 123 456"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Contact Email
-                      </label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                        <Input
-                          name="contactEmail"
-                          value={formData.contactEmail}
-                          onChange={handleInputChange}
-                          disabled={!isEditing}
-                          placeholder="contact@example.com"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Location
-                    </label>
-                    <LocationPicker
-                      value={formData.location}
-                      onChange={(location) =>
-                        setFormData((prev) => ({ ...prev, location }))
-                      }
+                    <Input
+                      name="contactPhone"
+                      value={formData.contactPhone}
+                      onChange={handleInputChange}
                       disabled={!isEditing}
+                      placeholder="Phone Number"
+                      
+                    />
+                    <Input
+                      name="contactEmail"
+                      value={formData.contactEmail}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Contact Email"
+                      
                     />
                   </div>
+                  <LocationPicker
+                    value={formData.location}
+                    onChange={(loc) =>
+                      setFormData((p) => ({ ...p, location: loc }))
+                    }
+                    disabled={!isEditing}
+                  />
+                </CardContent>
+              </Card>
 
-                  {/* Business Info (for Sellers) */}
-                  {session.user.role === "SELLER" && (
-                    <div className="space-y-4 pt-6 border-t">
-                      <h3 className="text-lg font-semibold flex items-center">
-                        <Building className="w-5 h-5 mr-2" />
-                        Business Information
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Business Name
-                          </label>
-                          <Input
-                            name="businessName"
-                            value={formData.businessName}
-                            onChange={handleInputChange}
-                            disabled={!isEditing}
-                            placeholder="Your business name"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Business Type
-                          </label>
-                          <select
-                            name="businessType"
-                            value={formData.businessType}
-                            onChange={(e) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                businessType: e.target.value,
-                              }))
-                            }
-                            disabled={!isEditing}
-                            className="w-full px-3 py-2 border border-input bg-background rounded-md"
-                          >
-                            <option value="">Select type</option>
-                            <option value="RESTAURANT">Restaurant</option>
-                            <option value="GROCERY_STORE">Grocery Store</option>
-                            <option value="WHOLESALER">Wholesaler</option>
-                            <option value="RETAILER">Retailer</option>
-                            <option value="OTHER">Other</option>
-                          </select>
-                        </div>
-                      </div>
+              {session.user.role === "FARMER" && (
+                <Card className="glassmorphism">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Leaf className="w-5 h-5 mr-2" />
+                      Farmer Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        name="farmName"
+                        value={formData.farmName}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        placeholder="Farm Name"
+                      />
+                      <select
+                        name="farmCapacity"
+                        value={formData.farmCapacity}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        className="w-full px-3 py-2 border border-input bg-background rounded-md"
+                      >
+                        <option value="SMALL">Small Capacity</option>
+                        <option value="MEDIUM">Medium Capacity</option>
+                        <option value="LARGE">Large Capacity</option>
+                      </select>
                     </div>
-                  )}
-
-                  {/* Specializations (for Farmers) */}
-                  {session.user.role === "FARMER" && (
-                    <div className="space-y-4 pt-6 border-t">
-                      <h3 className="text-lg font-semibold">Specializations</h3>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {formData.specializations.map((spec, index) => (
+                    <Textarea
+                      name="farmLocationDetails"
+                      value={formData.farmLocationDetails}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Detailed farm location (e.g., near market)"
+                    />
+                    <div>
+                      <h3 className="text-sm font-medium mb-2">
+                        Specializations (Certifications)
+                      </h3>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.specializations.map((spec) => (
                           <span
-                            key={index}
+                            key={spec}
                             className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary/10 text-primary"
                           >
                             {spec}
                             {isEditing && (
                               <button
                                 type="button"
-                                onClick={() => removeSpecialization(spec)}
-                                className="ml-2 text-primary hover:text-primary/70"
+                                onClick={() =>
+                                  removeFromArrayField("specializations", spec)
+                                }
+                                className="ml-2 font-bold hover:text-red-500"
                               >
                                 ×
                               </button>
@@ -358,10 +389,13 @@ export default function ProfilePage() {
                         <div className="flex gap-2">
                           <Input
                             placeholder="Add specialization"
-                            onKeyPress={(e) => {
+                            onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();
-                                addSpecialization(e.currentTarget.value);
+                                addToArrayField(
+                                  "specializations",
+                                  e.currentTarget.value
+                                );
                                 e.currentTarget.value = "";
                               }
                             }}
@@ -372,7 +406,7 @@ export default function ProfilePage() {
                             onClick={(e) => {
                               const input = e.currentTarget
                                 .previousElementSibling as HTMLInputElement;
-                              addSpecialization(input.value);
+                              addToArrayField("specializations", input.value);
                               input.value = "";
                             }}
                           >
@@ -381,36 +415,111 @@ export default function ProfilePage() {
                         </div>
                       )}
                     </div>
-                  )}
+                  </CardContent>
+                </Card>
+              )}
 
-                  {isEditing && (
-                    <div className="flex justify-end space-x-4 pt-6 border-t">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setIsEditing(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="submit"
-                        disabled={updateProfileMutation.isPending}
-                        className="bg-gradient-primary text-white"
-                      >
-                        {updateProfileMutation.isPending ? (
-                          "Saving..."
-                        ) : (
-                          <>
-                            <Save className="w-4 h-4 mr-2" />
-                            Save Changes
-                          </>
-                        )}
-                      </Button>
+              {session.user.role === "SELLER" && (
+                <Card className="glassmorphism">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Building className="w-5 h-5 mr-2" />
+                      Business Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <Input
+                      name="businessName"
+                      value={formData.businessName}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Your business name"
+                    />
+                    <div>
+                      <h3 className="text-sm font-medium mb-2">
+                        Delivery Options
+                      </h3>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {formData.deliveryOptions.map((opt) => (
+                          <span
+                            key={opt}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-500/10 text-blue-600"
+                          >
+                            {opt}
+                            {isEditing && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  removeFromArrayField("deliveryOptions", opt)
+                                }
+                                className="ml-2 font-bold hover:text-red-500"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                      {isEditing && (
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Add delivery option (e.g., Home Delivery)"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                addToArrayField(
+                                  "deliveryOptions",
+                                  e.currentTarget.value
+                                );
+                                e.currentTarget.value = "";
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={(e) => {
+                              const input = e.currentTarget
+                                .previousElementSibling as HTMLInputElement;
+                              addToArrayField("deliveryOptions", input.value);
+                              input.value = "";
+                            }}
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </form>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              )}
+
+              {isEditing && (
+                <div className="flex justify-end space-x-4 pt-6 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsEditing(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isUpdating}
+                    className="bg-gradient-primary text-white"
+                  >
+                    {isUpdating ? (
+                      "Saving..."
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </form>
           </SlideInOnScroll>
         </div>
       </div>
