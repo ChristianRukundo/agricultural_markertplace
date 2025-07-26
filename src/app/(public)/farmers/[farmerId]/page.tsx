@@ -22,9 +22,9 @@ import {
   Clock,
   TrendingUp,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { StarRating } from "@/components/ui/star-rating";
 import { Textarea } from "@/components/ui/textarea";
 import { FadeIn } from "@/components/animations/fade-in";
@@ -200,8 +200,9 @@ export default function FarmerProfilePage() {
                     {/* Rating */}
                     <div className="flex items-center justify-center space-x-2 mb-4">
                       <StarRating rating={farmer.averageRating || 0} readonly />
-                     <span className="text-sm text-muted-foreground">({farmer._count.receivedReviews || 0} reviews)</span>
-
+                      <span className="text-sm text-muted-foreground">
+                        ({farmer._count.receivedReviews || 0} reviews)
+                      </span>
                     </div>
 
                     {/* Location */}
@@ -366,7 +367,9 @@ export default function FarmerProfilePage() {
                       },
                       {
                         key: "reviews",
-                        label: `Reviews (${farmer._count.receivedReviews || 0})` 
+                        label: `Reviews (${
+                          farmer._count.receivedReviews || 0
+                        })`,
                       },
                       { key: "about", label: "About" },
                     ].map((tab) => (
@@ -578,8 +581,9 @@ export default function FarmerProfilePage() {
                             ({farmer._count.receivedReviews || 0} reviews)
                           </span>
                           <p className="text-muted-foreground">
-  Based on {farmer._count.receivedReviews || 0} reviews
-</p>
+                            Based on {farmer._count.receivedReviews || 0}{" "}
+                            reviews
+                          </p>
                         </div>
                       </div>
                     </CardContent>

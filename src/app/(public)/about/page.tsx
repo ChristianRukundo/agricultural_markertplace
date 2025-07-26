@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react";
 import {
   Target,
   Award,
@@ -12,13 +12,13 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
-} from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { FadeIn } from "@/components/animations/fade-in"
-import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll"
-import { useGSAP } from "@/components/providers/gsap-provider"
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { FadeIn } from "@/components/animations/fade-in";
+import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
+import { useGSAP } from "@/components/providers/gsap-provider";
 
 const ABOUT_INFO = {
   mission:
@@ -90,10 +90,26 @@ const ABOUT_INFO = {
     },
   ],
   stats: [
-    { number: "5,000+", label: "Active Farmers", description: "Verified farmers across all 30 districts" },
-    { number: "2,500+", label: "Registered Sellers", description: "Restaurants, stores, and wholesalers" },
-    { number: "50,000+", label: "Successful Transactions", description: "Orders completed successfully" },
-    { number: "30", label: "Districts Covered", description: "Complete nationwide coverage" },
+    {
+      number: "5,000+",
+      label: "Active Farmers",
+      description: "Verified farmers across all 30 districts",
+    },
+    {
+      number: "2,500+",
+      label: "Registered Sellers",
+      description: "Restaurants, stores, and wholesalers",
+    },
+    {
+      number: "50,000+",
+      label: "Successful Transactions",
+      description: "Orders completed successfully",
+    },
+    {
+      number: "30",
+      label: "Districts Covered",
+      description: "Complete nationwide coverage",
+    },
   ],
   timeline: [
     {
@@ -105,17 +121,20 @@ const ABOUT_INFO = {
     {
       year: "2022",
       title: "First 100 Farmers",
-      description: "Onboarded our first 100 farmers and launched the beta platform in Kigali.",
+      description:
+        "Onboarded our first 100 farmers and launched the beta platform in Kigali.",
     },
     {
       year: "2023",
       title: "Nationwide Expansion",
-      description: "Expanded to all 30 districts of Rwanda and reached 1,000+ farmers on the platform.",
+      description:
+        "Expanded to all 30 districts of Rwanda and reached 1,000+ farmers on the platform.",
     },
     {
       year: "2024",
       title: "Major Milestones",
-      description: "Reached 5,000+ farmers, launched mobile app, and processed over 50,000 orders.",
+      description:
+        "Reached 5,000+ farmers, launched mobile app, and processed over 50,000 orders.",
     },
   ],
   certifications: [
@@ -135,7 +154,7 @@ const ABOUT_INFO = {
       year: "2024",
     },
   ],
-}
+};
 
 const FAQ_DATA = [
   {
@@ -158,22 +177,22 @@ const FAQ_DATA = [
     answer:
       "We're currently focused on perfecting our model in Rwanda. Once we've achieved our goals here, we plan to expand to other East African countries with similar agricultural challenges.",
   },
-]
+];
 
 export default function AboutPage() {
-  const heroRef = useRef<HTMLDivElement>(null)
-  const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
-  const gsap = useGSAP()
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const gsap = useGSAP();
 
   useEffect(() => {
-    if (!heroRef.current) return
+    if (!heroRef.current) return;
 
     gsap.fromTo(
       ".about-hero-content",
       { opacity: 0, y: 50 },
-      { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", stagger: 0.2 },
-    )
-  }, [gsap])
+      { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", stagger: 0.2 }
+    );
+  }, [gsap]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -191,7 +210,8 @@ export default function AboutPage() {
             </FadeIn>
             <FadeIn delay={0.2}>
               <p className="about-hero-content text-xl text-muted-foreground mb-8">
-                Transforming Rwanda's agricultural landscape through technology and direct farmer-seller connections
+                Transforming Rwanda's agricultural landscape through technology
+                and direct farmer-seller connections
               </p>
             </FadeIn>
             <FadeIn delay={0.4}>
@@ -227,7 +247,9 @@ export default function AboutPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <p className="text-lg text-muted-foreground leading-relaxed mb-6">{ABOUT_INFO.mission}</p>
+                  <p className="text-lg text-muted-foreground leading-relaxed mb-6">
+                    {ABOUT_INFO.mission}
+                  </p>
                   <div className="space-y-3">
                     <div className="flex items-center">
                       <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
@@ -255,7 +277,9 @@ export default function AboutPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <p className="text-lg text-muted-foreground leading-relaxed mb-6">{ABOUT_INFO.vision}</p>
+                  <p className="text-lg text-muted-foreground leading-relaxed mb-6">
+                    {ABOUT_INFO.vision}
+                  </p>
                   <div className="space-y-3">
                     <div className="flex items-center">
                       <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
@@ -306,8 +330,12 @@ export default function AboutPage() {
                     )}
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold mb-2">{milestone.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{milestone.description}</p>
+                    <h3 className="text-xl font-bold mb-2">
+                      {milestone.title}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {milestone.description}
+                    </p>
                   </div>
                 </div>
               </SlideInOnScroll>
@@ -325,7 +353,8 @@ export default function AboutPage() {
                 Our <span className="gradient-text">Values</span>
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                The principles that guide everything we do and every decision we make
+                The principles that guide everything we do and every decision we
+                make
               </p>
             </div>
           </SlideInOnScroll>
@@ -338,7 +367,9 @@ export default function AboutPage() {
                     {value.icon}
                   </div>
                   <h3 className="text-2xl font-bold mb-4">{value.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{value.description}</p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {value.description}
+                  </p>
                 </Card>
               </SlideInOnScroll>
             ))}
@@ -351,9 +382,12 @@ export default function AboutPage() {
         <div className="container mx-auto px-4">
           <SlideInOnScroll>
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">Our Impact</h2>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4">
+                Our Impact
+              </h2>
               <p className="text-xl opacity-90 max-w-2xl mx-auto">
-                Numbers that showcase our growing community and the real difference we're making
+                Numbers that showcase our growing community and the real
+                difference we're making
               </p>
             </div>
           </SlideInOnScroll>
@@ -362,7 +396,9 @@ export default function AboutPage() {
             {ABOUT_INFO.stats.map((stat, index) => (
               <SlideInOnScroll key={index} delay={index * 0.1}>
                 <div className="text-center">
-                  <div className="text-4xl md:text-5xl font-bold mb-2">{stat.number}</div>
+                  <div className="text-4xl md:text-5xl font-bold mb-2">
+                    {stat.number}
+                  </div>
                   <div className="text-lg font-medium mb-1">{stat.label}</div>
                   <div className="text-sm opacity-80">{stat.description}</div>
                 </div>
@@ -399,27 +435,54 @@ export default function AboutPage() {
                   </div>
                   <div className="p-6">
                     <h3 className="text-xl font-bold mb-2">{member.name}</h3>
-                    <p className="text-primary font-medium mb-4">{member.role}</p>
-                    <p className="text-muted-foreground text-sm mb-4 leading-relaxed">{member.bio}</p>
+                    <p className="text-primary font-medium mb-4">
+                      {member.role}
+                    </p>
+                    <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+                      {member.bio}
+                    </p>
 
                     {/* Social Links */}
                     <div className="flex items-center space-x-3">
                       {member.social.linkedin && (
-                        <Button variant="ghost" size="sm" className="p-2" asChild>
-                          <a href={member.social.linkedin} target="_blank" rel="noopener noreferrer">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-2"
+                          asChild
+                        >
+                          <a
+                            href={member.social.linkedin}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <ExternalLink className="w-4 h-4" />
                           </a>
                         </Button>
                       )}
                       {member.social.twitter && (
-                        <Button variant="ghost" size="sm" className="p-2" asChild>
-                          <a href={member.social.twitter} target="_blank" rel="noopener noreferrer">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-2"
+                          asChild
+                        >
+                          <a
+                            href={member.social.twitter}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             <ExternalLink className="w-4 h-4" />
                           </a>
                         </Button>
                       )}
                       {member.social.email && (
-                        <Button variant="ghost" size="sm" className="p-2" asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-2"
+                          asChild
+                        >
                           <a href={`mailto:${member.social.email}`}>
                             <ExternalLink className="w-4 h-4" />
                           </a>
@@ -443,7 +506,8 @@ export default function AboutPage() {
                 Our <span className="gradient-text">Certifications</span>
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Recognized standards and certifications that validate our commitment to quality
+                Recognized standards and certifications that validate our
+                commitment to quality
               </p>
             </div>
           </SlideInOnScroll>
@@ -456,7 +520,9 @@ export default function AboutPage() {
                     <Award className="w-8 h-8 text-primary" />
                   </div>
                   <h3 className="text-xl font-bold mb-2">{cert.name}</h3>
-                  <p className="text-muted-foreground mb-2">{cert.description}</p>
+                  <p className="text-muted-foreground mb-2">
+                    {cert.description}
+                  </p>
                   <Badge variant="secondary">{cert.year}</Badge>
                 </Card>
               </SlideInOnScroll>
@@ -471,7 +537,8 @@ export default function AboutPage() {
           <SlideInOnScroll>
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Frequently Asked <span className="gradient-text">Questions</span>
+                Frequently Asked{" "}
+                <span className="gradient-text">Questions</span>
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Common questions about AgriConnect and our mission
@@ -484,10 +551,14 @@ export default function AboutPage() {
               <SlideInOnScroll key={index} delay={index * 0.1}>
                 <Card className="glassmorphism">
                   <button
-                    onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
+                    onClick={() =>
+                      setExpandedFaq(expandedFaq === index ? null : index)
+                    }
                     className="w-full p-6 text-left flex items-center justify-between hover:bg-muted/50 transition-colors"
                   >
-                    <h3 className="text-lg font-semibold pr-4">{faq.question}</h3>
+                    <h3 className="text-lg font-semibold pr-4">
+                      {faq.question}
+                    </h3>
                     {expandedFaq === index ? (
                       <ChevronUp className="w-5 h-5 text-primary flex-shrink-0" />
                     ) : (
@@ -496,7 +567,9 @@ export default function AboutPage() {
                   </button>
                   {expandedFaq === index && (
                     <div className="px-6 pb-6">
-                      <p className="text-muted-foreground leading-relaxed">{faq.answer}</p>
+                      <p className="text-muted-foreground leading-relaxed">
+                        {faq.answer}
+                      </p>
                     </div>
                   )}
                 </Card>
@@ -510,12 +583,20 @@ export default function AboutPage() {
       <section className="py-20 bg-gradient-primary text-white">
         <div className="container mx-auto px-4 text-center">
           <SlideInOnScroll>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Join Our Mission?</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Ready to Join Our Mission?
+            </h2>
             <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-              Be part of the agricultural revolution in Rwanda. Connect, trade, and grow with us.
+              Be part of the agricultural revolution in Rwanda. Connect, trade,
+              and grow with us.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Button size="lg" variant="secondary" className="px-8 py-4 text-lg" asChild>
+              <Button
+                size="lg"
+                variant="secondary"
+                className="px-8 py-4 text-lg"
+                asChild
+              >
                 <a href="/auth/register">Get Started Today</a>
               </Button>
               <Button
@@ -545,5 +626,5 @@ export default function AboutPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }

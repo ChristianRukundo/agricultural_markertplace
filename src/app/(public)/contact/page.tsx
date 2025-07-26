@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/Badge";
 import { FadeIn } from "@/components/animations/fade-in";
 import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
 import { useToast } from "@/hooks/use-toast";

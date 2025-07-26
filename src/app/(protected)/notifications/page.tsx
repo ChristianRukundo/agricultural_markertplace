@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Bell, Check, Trash2, Filter } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/Badge";
 import { FadeIn } from "@/components/animations/fade-in";
 import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
 import { useToast } from "@/hooks/use-toast";

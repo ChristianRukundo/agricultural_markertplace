@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useParams } from "next/navigation"
+import { useState } from "react";
+import { useParams } from "next/navigation";
 import {
   Heart,
   Share2,
@@ -20,32 +20,36 @@ import {
   ChevronRight,
   Plus,
   Minus,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { StarRating } from "@/components/ui/star-rating"
-import { Textarea } from "@/components/ui/textarea"
-import { FadeIn } from "@/components/animations/fade-in"
-import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll"
-import { useToast } from "@/hooks/use-toast"
-import { api } from "@/lib/trpc/client"
-import { cn } from "@/lib/utils"
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { StarRating } from "@/components/ui/star-rating";
+import { Textarea } from "@/components/ui/textarea";
+import { FadeIn } from "@/components/animations/fade-in";
+import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
+import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/trpc/client";
+import { cn } from "@/lib/utils";
 
 export default function ProductDetailPage() {
-  const params = useParams()
-  const productId = params.productId as string
-  const { toast } = useToast()
+  const params = useParams();
+  const productId = params.productId as string;
+  const { toast } = useToast();
 
-  const [quantity, setQuantity] = useState(1)
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [activeTab, setActiveTab] = useState<"description" | "reviews" | "farmer">("description")
-  const [reviewText, setReviewText] = useState("")
-  const [reviewRating, setReviewRating] = useState(5)
-  const [isWishlisted, setIsWishlisted] = useState(false)
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<
+    "description" | "reviews" | "farmer"
+  >("description");
+  const [reviewText, setReviewText] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
   // Fetch product details
-  const { data: product, isLoading } = api.product.getById.useQuery({ id: productId })
+  const { data: product, isLoading } = api.product.getById.useQuery({
+    id: productId,
+  });
 
   // Fetch product reviews
   const { data: reviewsData } = api.review.getReviews.useQuery({
@@ -53,16 +57,17 @@ export default function ProductDetailPage() {
     reviewedEntityType: "PRODUCT",
     page: 1,
     limit: 10,
-  })
+  });
 
   // Fetch related products
-  const relatedProductsQueryInput: any = { limit: 4 }
-  if (product?.category?.id) relatedProductsQueryInput.categoryId = product.category.id
-  if (productId) relatedProductsQueryInput.excludeId = productId
+  const relatedProductsQueryInput: any = { limit: 4 };
+  if (product?.category?.id)
+    relatedProductsQueryInput.categoryId = product.category.id;
+  if (productId) relatedProductsQueryInput.excludeId = productId;
   const { data: relatedProducts } = api.product.getProducts.useQuery(
     relatedProductsQueryInput,
     { enabled: !!product?.category?.id }
-  )
+  );
 
   // Add to cart mutation
   const addToCartMutation = api.cart.addItem.useMutation({
@@ -70,16 +75,16 @@ export default function ProductDetailPage() {
       toast({
         title: "Added to Cart",
         description: `${quantity} ${product?.unit} of ${product?.name} added to your cart.`,
-      })
+      });
     },
     onError: (error) => {
       toast({
         title: "Failed to Add",
         description: error.message,
         variant: "destructive",
-      })
+      });
     },
-  })
+  });
 
   // Add review mutation
   const addReviewMutation = api.review.create.useMutation({
@@ -87,36 +92,36 @@ export default function ProductDetailPage() {
       toast({
         title: "Review Added",
         description: "Thank you for your feedback!",
-      })
-      setReviewText("")
-      setReviewRating(5)
+      });
+      setReviewText("");
+      setReviewRating(5);
     },
-  })
+  });
 
   const handleAddToCart = () => {
-    if (!product) return
+    if (!product) return;
     addToCartMutation.mutate({
       productId: product.id,
       quantity,
       pricePerUnit: product.pricePerUnit,
-    })
-  }
+    });
+  };
 
   const handleSubmitReview = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!reviewText.trim()) return
+    e.preventDefault();
+    if (!reviewText.trim()) return;
 
     addReviewMutation.mutate({
       reviewedEntityId: productId,
       reviewedEntityType: "PRODUCT",
       rating: reviewRating,
       comment: reviewText,
-    })
-  }
+    });
+  };
 
   const productImages = product?.images
     ? JSON.parse(product.images)
-    : ["/placeholder.svg?height=600&width=600&text=Product+Image"]
+    : ["/placeholder.svg?height=600&width=600&text=Product+Image"];
 
   if (isLoading) {
     return (
@@ -136,7 +141,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!product) {
@@ -144,13 +149,15 @@ export default function ProductDetailPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-          <p className="text-muted-foreground mb-8">The product you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground mb-8">
+            The product you're looking for doesn't exist.
+          </p>
           <Button asChild>
             <a href="/products">Browse Products</a>
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -163,7 +170,10 @@ export default function ProductDetailPage() {
               Home
             </a>
             <span className="text-muted-foreground">/</span>
-            <a href="/products" className="text-muted-foreground hover:text-foreground">
+            <a
+              href="/products"
+              className="text-muted-foreground hover:text-foreground"
+            >
               Products
             </a>
             <span className="text-muted-foreground">/</span>
@@ -194,7 +204,9 @@ export default function ProductDetailPage() {
                       size="icon"
                       className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background"
                       onClick={() =>
-                        setSelectedImageIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1))
+                        setSelectedImageIndex((prev) =>
+                          prev === 0 ? productImages.length - 1 : prev - 1
+                        )
                       }
                     >
                       <ChevronLeft className="w-4 h-4" />
@@ -204,7 +216,9 @@ export default function ProductDetailPage() {
                       size="icon"
                       className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background"
                       onClick={() =>
-                        setSelectedImageIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1))
+                        setSelectedImageIndex((prev) =>
+                          prev === productImages.length - 1 ? 0 : prev + 1
+                        )
                       }
                     >
                       <ChevronRight className="w-4 h-4" />
@@ -236,9 +250,18 @@ export default function ProductDetailPage() {
                     className="bg-background/80 hover:bg-background"
                     onClick={() => setIsWishlisted(!isWishlisted)}
                   >
-                    <Heart className={cn("w-4 h-4", isWishlisted && "fill-red-500 text-red-500")} />
+                    <Heart
+                      className={cn(
+                        "w-4 h-4",
+                        isWishlisted && "fill-red-500 text-red-500"
+                      )}
+                    />
                   </Button>
-                  <Button variant="ghost" size="icon" className="bg-background/80 hover:bg-background">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="bg-background/80 hover:bg-background"
+                  >
                     <Share2 className="w-4 h-4" />
                   </Button>
                 </div>
@@ -253,7 +276,9 @@ export default function ProductDetailPage() {
                       onClick={() => setSelectedImageIndex(index)}
                       className={cn(
                         "flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors",
-                        selectedImageIndex === index ? "border-primary" : "border-muted",
+                        selectedImageIndex === index
+                          ? "border-primary"
+                          : "border-muted"
                       )}
                     >
                       <img
@@ -276,21 +301,31 @@ export default function ProductDetailPage() {
                 <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
                 <div className="flex items-center space-x-4 mb-4">
                   <div className="flex items-center space-x-1">
-                    <StarRating rating={product.averageRating || 0} readonly size="sm" />
+                    <StarRating
+                      rating={product.averageRating || 0}
+                      readonly
+                      size="sm"
+                    />
                     <span className="text-sm text-muted-foreground">
                       ({reviewsData?.pagination.total || 0} reviews)
                     </span>
                   </div>
                   <Badge variant="outline">{product.category}</Badge>
                 </div>
-                <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+                <p className="text-muted-foreground leading-relaxed">
+                  {product.description}
+                </p>
               </div>
 
               {/* Price */}
               <div className="bg-muted/50 rounded-lg p-4">
                 <div className="flex items-baseline space-x-2">
-                  <span className="text-3xl font-bold text-primary">RWF {product.pricePerUnit.toLocaleString()}</span>
-                  <span className="text-muted-foreground">per {product.unit}</span>
+                  <span className="text-3xl font-bold text-primary">
+                    RWF {product.pricePerUnit.toLocaleString()}
+                  </span>
+                  <span className="text-muted-foreground">
+                    per {product.unit}
+                  </span>
                 </div>
                 {product.minimumOrder && (
                   <p className="text-sm text-muted-foreground mt-1">
@@ -304,13 +339,15 @@ export default function ProductDetailPage() {
                 <div className="flex items-center space-x-2">
                   <Package className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm">
-                    <span className="font-medium">Available:</span> {product.quantityAvailable} {product.unit}
+                    <span className="font-medium">Available:</span>{" "}
+                    {product.quantityAvailable} {product.unit}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm">
-                    <span className="font-medium">Harvest:</span> {new Date(product.harvestDate).toLocaleDateString()}
+                    <span className="font-medium">Harvest:</span>{" "}
+                    {new Date(product.harvestDate).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -331,7 +368,9 @@ export default function ProductDetailPage() {
               {/* Quantity Selector */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Quantity ({product.unit})</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Quantity ({product.unit})
+                  </label>
                   <div className="flex items-center space-x-3">
                     <Button
                       variant="outline"
@@ -341,11 +380,17 @@ export default function ProductDetailPage() {
                     >
                       <Minus className="w-4 h-4" />
                     </Button>
-                    <span className="w-16 text-center font-medium">{quantity}</span>
+                    <span className="w-16 text-center font-medium">
+                      {quantity}
+                    </span>
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => setQuantity(Math.min(product.quantityAvailable, quantity + 1))}
+                      onClick={() =>
+                        setQuantity(
+                          Math.min(product.quantityAvailable, quantity + 1)
+                        )
+                      }
                       disabled={quantity >= product.quantityAvailable}
                     >
                       <Plus className="w-4 h-4" />
@@ -370,7 +415,10 @@ export default function ProductDetailPage() {
                   size="lg"
                   className="w-full bg-gradient-primary text-white"
                   onClick={handleAddToCart}
-                  disabled={addToCartMutation.isPending || product.availability !== "IN_STOCK"}
+                  disabled={
+                    addToCartMutation.isPending ||
+                    product.availability !== "IN_STOCK"
+                  }
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   {addToCartMutation.isPending ? "Adding..." : "Add to Cart"}
@@ -416,7 +464,10 @@ export default function ProductDetailPage() {
               <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
                 {[
                   { key: "description", label: "Description" },
-                  { key: "reviews", label: `Reviews (${reviewsData?.pagination.total || 0})` },
+                  {
+                    key: "reviews",
+                    label: `Reviews (${reviewsData?.pagination.total || 0})`,
+                  },
                   { key: "farmer", label: "About Farmer" },
                 ].map((tab) => (
                   <button
@@ -426,7 +477,7 @@ export default function ProductDetailPage() {
                       "px-4 py-2 rounded-md text-sm font-medium transition-colors",
                       activeTab === tab.key
                         ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground",
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {tab.label}
@@ -438,8 +489,12 @@ export default function ProductDetailPage() {
               {activeTab === "description" && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-3">Product Details</h3>
-                    <p className="text-muted-foreground leading-relaxed mb-6">{product.description}</p>
+                    <h3 className="text-lg font-semibold mb-3">
+                      Product Details
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed mb-6">
+                      {product.description}
+                    </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
@@ -455,11 +510,19 @@ export default function ProductDetailPage() {
                           </div>
                           <div className="flex justify-between">
                             <dt className="text-muted-foreground">Organic:</dt>
-                            <dd className="font-medium">{product.isOrganic ? "Yes" : "No"}</dd>
+                            <dd className="font-medium">
+                              {product.isOrganic ? "Yes" : "No"}
+                            </dd>
                           </div>
                           <div className="flex justify-between">
-                            <dt className="text-muted-foreground">Harvest Date:</dt>
-                            <dd className="font-medium">{new Date(product.harvestDate).toLocaleDateString()}</dd>
+                            <dt className="text-muted-foreground">
+                              Harvest Date:
+                            </dt>
+                            <dd className="font-medium">
+                              {new Date(
+                                product.harvestDate
+                              ).toLocaleDateString()}
+                            </dd>
                           </div>
                         </dl>
                       </div>
@@ -470,7 +533,13 @@ export default function ProductDetailPage() {
                           <div className="flex justify-between">
                             <dt className="text-muted-foreground">Status:</dt>
                             <dd>
-                              <Badge className={product.availability === "IN_STOCK" ? "bg-green-500" : "bg-red-500"}>
+                              <Badge
+                                className={
+                                  product.availability === "IN_STOCK"
+                                    ? "bg-green-500"
+                                    : "bg-red-500"
+                                }
+                              >
                                 {product.availability.replace("_", " ")}
                               </Badge>
                             </dd>
@@ -483,7 +552,9 @@ export default function ProductDetailPage() {
                           </div>
                           {product.minimumOrder && (
                             <div className="flex justify-between">
-                              <dt className="text-muted-foreground">Min. Order:</dt>
+                              <dt className="text-muted-foreground">
+                                Min. Order:
+                              </dt>
                               <dd className="font-medium">
                                 {product.minimumOrder} {product.unit}
                               </dd>
@@ -503,10 +574,17 @@ export default function ProductDetailPage() {
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <div className="flex items-center space-x-2 mb-2">
-                          <span className="text-3xl font-bold">{product.averageRating?.toFixed(1) || "0.0"}</span>
-                          <StarRating rating={product.averageRating || 0} readonly />
+                          <span className="text-3xl font-bold">
+                            {product.averageRating?.toFixed(1) || "0.0"}
+                          </span>
+                          <StarRating
+                            rating={product.averageRating || 0}
+                            readonly
+                          />
                         </div>
-                        <p className="text-muted-foreground">Based on {reviewsData?.pagination.total || 0} reviews</p>
+                        <p className="text-muted-foreground">
+                          Based on {reviewsData?.pagination.total || 0} reviews
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -519,11 +597,19 @@ export default function ProductDetailPage() {
                     <CardContent>
                       <form onSubmit={handleSubmitReview} className="space-y-4">
                         <div>
-                          <label className="block text-sm font-medium mb-2">Rating</label>
-                          <StarRating rating={reviewRating} onRatingChange={setReviewRating} size="lg" />
+                          <label className="block text-sm font-medium mb-2">
+                            Rating
+                          </label>
+                          <StarRating
+                            rating={reviewRating}
+                            onRatingChange={setReviewRating}
+                            size="lg"
+                          />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-2">Your Review</label>
+                          <label className="block text-sm font-medium mb-2">
+                            Your Review
+                          </label>
                           <Textarea
                             value={reviewText}
                             onChange={(e) => setReviewText(e.target.value)}
@@ -531,8 +617,15 @@ export default function ProductDetailPage() {
                             rows={4}
                           />
                         </div>
-                        <Button type="submit" disabled={addReviewMutation.isPending || !reviewText.trim()}>
-                          {addReviewMutation.isPending ? "Submitting..." : "Submit Review"}
+                        <Button
+                          type="submit"
+                          disabled={
+                            addReviewMutation.isPending || !reviewText.trim()
+                          }
+                        >
+                          {addReviewMutation.isPending
+                            ? "Submitting..."
+                            : "Submit Review"}
                         </Button>
                       </form>
                     </CardContent>
@@ -546,18 +639,30 @@ export default function ProductDetailPage() {
                           <div className="flex items-start space-x-4">
                             <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
                               <span className="text-white font-medium">
-                                {review.reviewer.profile?.name?.charAt(0) || "U"}
+                                {review.reviewer.profile?.name?.charAt(0) ||
+                                  "U"}
                               </span>
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-medium">{review.reviewer.profile?.name || "Anonymous"}</h4>
+                                <h4 className="font-medium">
+                                  {review.reviewer.profile?.name || "Anonymous"}
+                                </h4>
                                 <span className="text-sm text-muted-foreground">
-                                  {new Date(review.createdAt).toLocaleDateString()}
+                                  {new Date(
+                                    review.createdAt
+                                  ).toLocaleDateString()}
                                 </span>
                               </div>
-                              <StarRating rating={review.rating} readonly size="sm" className="mb-2" />
-                              <p className="text-muted-foreground">{review.comment}</p>
+                              <StarRating
+                                rating={review.rating}
+                                readonly
+                                size="sm"
+                                className="mb-2"
+                              />
+                              <p className="text-muted-foreground">
+                                {review.comment}
+                              </p>
                             </div>
                           </div>
                         </CardContent>
@@ -576,27 +681,44 @@ export default function ProductDetailPage() {
                       </span>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold mb-2">{product.farmer?.profile?.name || "Unknown Farmer"}</h3>
+                      <h3 className="text-xl font-bold mb-2">
+                        {product.farmer?.profile?.name || "Unknown Farmer"}
+                      </h3>
                       <p className="text-muted-foreground mb-4">
-                        {product.farmer?.profile?.description || "Dedicated farmer providing quality produce."}
+                        {product.farmer?.profile?.description ||
+                          "Dedicated farmer providing quality produce."}
                       </p>
 
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                          <span className="text-sm text-muted-foreground">Products:</span>
-                          <span className="ml-2 font-medium">{product.farmer?._count?.products || 0}</span>
+                          <span className="text-sm text-muted-foreground">
+                            Products:
+                          </span>
+                          <span className="ml-2 font-medium">
+                            {product.farmer?._count?.products || 0}
+                          </span>
                         </div>
                         <div>
-                          <span className="text-sm text-muted-foreground">Rating:</span>
+                          <span className="text-sm text-muted-foreground">
+                            Rating:
+                          </span>
                           <div className="ml-2 inline-flex items-center space-x-1">
-                            <StarRating rating={product.farmer?.averageRating || 0} readonly size="sm" />
-                            <span className="text-sm">({product.farmer?._count?.receivedReviews || 0})</span>
+                            <StarRating
+                              rating={product.farmer?.averageRating || 0}
+                              readonly
+                              size="sm"
+                            />
+                            <span className="text-sm">
+                              ({product.farmer?._count?.receivedReviews || 0})
+                            </span>
                           </div>
                         </div>
                       </div>
 
                       <Button asChild>
-                        <a href={`/farmers/${product.farmerId}`}>View Full Profile</a>
+                        <a href={`/farmers/${product.farmerId}`}>
+                          View Full Profile
+                        </a>
                       </Button>
                     </div>
                   </div>
@@ -613,7 +735,10 @@ export default function ProductDetailPage() {
               <h2 className="text-2xl font-bold">Related Products</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {relatedProducts.products.map((relatedProduct) => (
-                  <Card key={relatedProduct.id} className="glassmorphism hover:scale-105 transition-transform">
+                  <Card
+                    key={relatedProduct.id}
+                    className="glassmorphism hover:scale-105 transition-transform"
+                  >
                     <CardContent className="p-4">
                       <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden">
                         <img
@@ -626,7 +751,9 @@ export default function ProductDetailPage() {
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <h3 className="font-semibold mb-2 line-clamp-2">{relatedProduct.name}</h3>
+                      <h3 className="font-semibold mb-2 line-clamp-2">
+                        {relatedProduct.name}
+                      </h3>
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-primary">
                           RWF {relatedProduct.pricePerUnit.toLocaleString()}
@@ -644,5 +771,5 @@ export default function ProductDetailPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

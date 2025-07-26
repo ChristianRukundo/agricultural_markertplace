@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/Badge";
 import { StarRating } from "@/components/ui/star-rating";
 import { FadeIn } from "@/components/animations/fade-in";
 import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";

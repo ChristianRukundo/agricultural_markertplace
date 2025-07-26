@@ -22,7 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/Badge";
 import { useGSAP } from "@/components/providers/gsap-provider";
 import { api } from "@/lib/trpc/client";
 import type { HTMLHeaderElement } from "react";
