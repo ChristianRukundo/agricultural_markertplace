@@ -1,18 +1,29 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Mail, Phone, MapPin, Clock, Send, Search, FileText, MessageSquare, Users, Headphones } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { FadeIn } from "@/components/animations/fade-in"
-import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll"
-import { useToast } from "@/hooks/use-toast"
-import { api } from "@/lib/trpc/client"
+import { useState } from "react";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  Send,
+  Search,
+  FileText,
+  MessageSquare,
+  Users,
+  Headphones,
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { FadeIn } from "@/components/animations/fade-in";
+import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
+import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/trpc/client";
 
 const CONTACT_INFO = {
   email: "hello@agriconnect.rw",
@@ -30,7 +41,7 @@ const CONTACT_INFO = {
     instagram: "https://instagram.com/agriconnect",
     linkedin: "https://linkedin.com/company/agriconnect",
   },
-}
+};
 
 const CONTACT_METHODS = [
   {
@@ -58,7 +69,8 @@ const CONTACT_METHODS = [
     contact: CONTACT_INFO.whatsapp,
     action: "Chat Now",
     href: `https://wa.me/${CONTACT_INFO.whatsapp.replace(/\s+/g, "")}`,
-    color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+    color:
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
   },
   {
     icon: <Users className="w-6 h-6" />,
@@ -67,9 +79,10 @@ const CONTACT_METHODS = [
     contact: "community.agriconnect.rw",
     action: "Join Forum",
     href: "#",
-    color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+    color:
+      "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   },
-]
+];
 
 const FAQ_DATA = [
   {
@@ -127,7 +140,7 @@ const FAQ_DATA = [
       },
     ],
   },
-]
+];
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -138,39 +151,53 @@ export default function ContactPage() {
     category: "",
     message: "",
     priority: "normal",
-  })
-  const [faqSearch, setFaqSearch] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<string>("")
-  const { toast } = useToast()
+  });
+  const [faqSearch, setFaqSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const { toast } = useToast();
 
   const contactMutation = api.contact.send.useMutation({
     onSuccess: () => {
       toast({
         title: "Message Sent!",
-        description: "Thank you for contacting us. We'll get back to you within 24 hours.",
-      })
-      setFormData({ name: "", email: "", phone: "", subject: "", category: "", message: "", priority: "normal" })
+        description:
+          "Thank you for contacting us. We'll get back to you within 24 hours.",
+      });
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        subject: "",
+        category: "",
+        message: "",
+        priority: "normal",
+      });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to send message. Please try again.",
+        description:
+          error.message || "Failed to send message. Please try again.",
         variant: "destructive",
-      })
+      });
     },
-  })
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Basic validation
-    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+    if (
+      !formData.name.trim() ||
+      !formData.email.trim() ||
+      !formData.message.trim()
+    ) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     if (!formData.email.includes("@")) {
@@ -178,19 +205,23 @@ export default function ContactPage() {
         title: "Invalid Email",
         description: "Please enter a valid email address.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    contactMutation.mutate(formData)
-  }
+    contactMutation.mutate(formData);
+  };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
-    }))
-  }
+    }));
+  };
 
   const filteredFAQs = FAQ_DATA.map((category) => ({
     ...category,
@@ -199,9 +230,9 @@ export default function ContactPage() {
         (selectedCategory === "" || category.category === selectedCategory) &&
         (faqSearch === "" ||
           q.question.toLowerCase().includes(faqSearch.toLowerCase()) ||
-          q.answer.toLowerCase().includes(faqSearch.toLowerCase())),
+          q.answer.toLowerCase().includes(faqSearch.toLowerCase()))
     ),
-  })).filter((category) => category.questions.length > 0)
+  })).filter((category) => category.questions.length > 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -214,7 +245,8 @@ export default function ContactPage() {
                 Get In <span className="gradient-text">Touch</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+                Have questions? We'd love to hear from you. Send us a message
+                and we'll respond as soon as possible.
               </p>
               <div className="flex items-center justify-center space-x-8 text-sm">
                 <div className="flex items-center">
@@ -240,8 +272,12 @@ export default function ContactPage() {
         <div className="container mx-auto px-4">
           <SlideInOnScroll>
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Choose Your Preferred Contact Method</h2>
-              <p className="text-xl text-muted-foreground">We're here to help through multiple channels</p>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Choose Your Preferred Contact Method
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                We're here to help through multiple channels
+              </p>
             </div>
           </SlideInOnScroll>
 
@@ -256,10 +292,17 @@ export default function ContactPage() {
                       {method.icon}
                     </div>
                     <h3 className="font-bold text-lg mb-2">{method.title}</h3>
-                    <p className="text-muted-foreground text-sm mb-4">{method.description}</p>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      {method.description}
+                    </p>
                     <p className="font-medium mb-4">{method.contact}</p>
                     <Button size="sm" className="w-full" asChild>
-                      <a href={method.href} target={method.href.startsWith("http") ? "_blank" : undefined}>
+                      <a
+                        href={method.href}
+                        target={
+                          method.href.startsWith("http") ? "_blank" : undefined
+                        }
+                      >
                         {method.action}
                       </a>
                     </Button>
@@ -284,14 +327,18 @@ export default function ContactPage() {
                     Send us a Message
                   </CardTitle>
                   <p className="text-muted-foreground">
-                    Fill out the form below and we'll get back to you within 24 hours.
+                    Fill out the form below and we'll get back to you within 24
+                    hours.
                   </p>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="name" className="block text-sm font-medium mb-2">
+                        <label
+                          htmlFor="name"
+                          className="block text-sm font-medium mb-2"
+                        >
                           Full Name *
                         </label>
                         <Input
@@ -305,7 +352,10 @@ export default function ContactPage() {
                         />
                       </div>
                       <div>
-                        <label htmlFor="email" className="block text-sm font-medium mb-2">
+                        <label
+                          htmlFor="email"
+                          className="block text-sm font-medium mb-2"
+                        >
                           Email Address *
                         </label>
                         <Input
@@ -322,7 +372,10 @@ export default function ContactPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label htmlFor="phone" className="block text-sm font-medium mb-2">
+                        <label
+                          htmlFor="phone"
+                          className="block text-sm font-medium mb-2"
+                        >
                           Phone Number
                         </label>
                         <Input
@@ -335,7 +388,10 @@ export default function ContactPage() {
                         />
                       </div>
                       <div>
-                        <label htmlFor="category" className="block text-sm font-medium mb-2">
+                        <label
+                          htmlFor="category"
+                          className="block text-sm font-medium mb-2"
+                        >
                           Category
                         </label>
                         <select
@@ -356,7 +412,10 @@ export default function ContactPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="subject" className="block text-sm font-medium mb-2">
+                      <label
+                        htmlFor="subject"
+                        className="block text-sm font-medium mb-2"
+                      >
                         Subject *
                       </label>
                       <Input
@@ -371,7 +430,10 @@ export default function ContactPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="priority" className="block text-sm font-medium mb-2">
+                      <label
+                        htmlFor="priority"
+                        className="block text-sm font-medium mb-2"
+                      >
                         Priority Level
                       </label>
                       <select
@@ -382,14 +444,19 @@ export default function ContactPage() {
                         className="w-full px-3 py-2 border border-input bg-background rounded-md"
                       >
                         <option value="low">Low - General question</option>
-                        <option value="normal">Normal - Standard inquiry</option>
+                        <option value="normal">
+                          Normal - Standard inquiry
+                        </option>
                         <option value="high">High - Urgent issue</option>
                         <option value="critical">Critical - System down</option>
                       </select>
                     </div>
 
                     <div>
-                      <label htmlFor="message" className="block text-sm font-medium mb-2">
+                      <label
+                        htmlFor="message"
+                        className="block text-sm font-medium mb-2"
+                      >
                         Message *
                       </label>
                       <Textarea
@@ -404,9 +471,18 @@ export default function ContactPage() {
                     </div>
 
                     <div className="flex items-start space-x-2">
-                      <input type="checkbox" id="consent" required className="mt-1" />
-                      <label htmlFor="consent" className="text-sm text-muted-foreground">
-                        I agree to the processing of my personal data for the purpose of responding to my inquiry. *
+                      <input
+                        type="checkbox"
+                        id="consent"
+                        required
+                        className="mt-1"
+                      />
+                      <label
+                        htmlFor="consent"
+                        className="text-sm text-muted-foreground"
+                      >
+                        I agree to the processing of my personal data for the
+                        purpose of responding to my inquiry. *
                       </label>
                     </div>
 
@@ -441,13 +517,22 @@ export default function ContactPage() {
                         <MapPin className="w-6 h-6 text-primary" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-bold text-lg mb-2">Visit Our Office</h3>
+                        <h3 className="font-bold text-lg mb-2">
+                          Visit Our Office
+                        </h3>
                         <p className="text-muted-foreground mb-4">
-                          Come visit us at our headquarters in Kigali Innovation City.
+                          Come visit us at our headquarters in Kigali Innovation
+                          City.
                         </p>
-                        <p className="font-medium mb-4">{CONTACT_INFO.address}</p>
+                        <p className="font-medium mb-4">
+                          {CONTACT_INFO.address}
+                        </p>
                         <Button variant="outline" size="sm" asChild>
-                          <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer">
+                          <a
+                            href="https://maps.google.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
                             Get Directions
                           </a>
                         </Button>
@@ -464,24 +549,37 @@ export default function ContactPage() {
                         <Clock className="w-6 h-6 text-primary" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-bold text-lg mb-4">Business Hours</h3>
+                        <h3 className="font-bold text-lg mb-4">
+                          Business Hours
+                        </h3>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Monday - Friday:</span>
-                            <span className="font-medium">8:00 AM - 6:00 PM</span>
+                            <span className="text-muted-foreground">
+                              Monday - Friday:
+                            </span>
+                            <span className="font-medium">
+                              8:00 AM - 6:00 PM
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Saturday:</span>
-                            <span className="font-medium">9:00 AM - 4:00 PM</span>
+                            <span className="text-muted-foreground">
+                              Saturday:
+                            </span>
+                            <span className="font-medium">
+                              9:00 AM - 4:00 PM
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Sunday:</span>
+                            <span className="text-muted-foreground">
+                              Sunday:
+                            </span>
                             <span className="font-medium">Closed</span>
                           </div>
                         </div>
                         <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                           <p className="text-sm text-green-700 dark:text-green-300">
-                            <strong>Emergency Support:</strong> Available 24/7 for critical issues
+                            <strong>Emergency Support:</strong> Available 24/7
+                            for critical issues
                           </p>
                         </div>
                       </div>
@@ -494,19 +592,31 @@ export default function ContactPage() {
                   <CardContent className="p-6">
                     <h3 className="font-bold text-lg mb-4">Quick Links</h3>
                     <div className="space-y-3">
-                      <Button variant="ghost" className="w-full justify-start" asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        asChild
+                      >
                         <a href="/help">
                           <FileText className="w-4 h-4 mr-3" />
                           Help Center
                         </a>
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start" asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        asChild
+                      >
                         <a href="/community">
                           <Users className="w-4 h-4 mr-3" />
                           Community Forum
                         </a>
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start" asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        asChild
+                      >
                         <a href="/status">
                           <Headphones className="w-4 h-4 mr-3" />
                           System Status
@@ -527,7 +637,8 @@ export default function ContactPage() {
           <SlideInOnScroll>
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Frequently Asked <span className="gradient-text">Questions</span>
+                Frequently Asked{" "}
+                <span className="gradient-text">Questions</span>
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Find quick answers to common questions about AgriConnect
@@ -567,20 +678,29 @@ export default function ContactPage() {
           {/* FAQ Content */}
           <div className="max-w-4xl mx-auto">
             {filteredFAQs.map((category, categoryIndex) => (
-              <SlideInOnScroll key={category.category} delay={categoryIndex * 0.1}>
+              <SlideInOnScroll
+                key={category.category}
+                delay={categoryIndex * 0.1}
+              >
                 <div className="mb-8">
                   <div className="flex items-center mb-6">
                     <Badge variant="secondary" className="mr-3">
                       {category.category}
                     </Badge>
-                    <h3 className="text-xl font-semibold">{category.category}</h3>
+                    <h3 className="text-xl font-semibold">
+                      {category.category}
+                    </h3>
                   </div>
                   <div className="space-y-4">
                     {category.questions.map((faq, index) => (
                       <Card key={index} className="glassmorphism">
                         <CardContent className="p-6">
-                          <h4 className="font-semibold text-lg mb-3">{faq.question}</h4>
-                          <p className="text-muted-foreground leading-relaxed">{faq.answer}</p>
+                          <h4 className="font-semibold text-lg mb-3">
+                            {faq.question}
+                          </h4>
+                          <p className="text-muted-foreground leading-relaxed">
+                            {faq.answer}
+                          </p>
                         </CardContent>
                       </Card>
                     ))}
@@ -599,8 +719,8 @@ export default function ContactPage() {
                   </p>
                   <Button
                     onClick={() => {
-                      setFaqSearch("")
-                      setSelectedCategory("")
+                      setFaqSearch("");
+                      setSelectedCategory("");
                     }}
                   >
                     Clear Search
@@ -612,5 +732,5 @@ export default function ContactPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }

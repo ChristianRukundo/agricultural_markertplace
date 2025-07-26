@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import React from "react"
+import React from "react";
 
-import { useState } from "react"
-import { useSession } from "next-auth/react"
-import { Camera, Save, Phone, Mail, User, Building } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { LocationPicker } from "@/components/ui/location-picker"
-import { FadeIn } from "@/components/animations/fade-in"
-import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll"
-import { useToast } from "@/hooks/use-toast"
-import { api } from "@/lib/trpc/client"
+import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { Camera, Save, Phone, Mail, User, Building } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/textarea";
+import { LocationPicker } from "@/components/ui/location-picker";
+import { FadeIn } from "@/components/animations/fade-in";
+import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
+import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/trpc/client";
 
 export default function ProfilePage() {
-  const { data: session } = useSession()
-  const { toast } = useToast()
-  const [isEditing, setIsEditing] = useState(false)
+  const { data: session } = useSession();
+  const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
 
   // Fetch user profile
-  const { data: profile, refetch } = api.user.getProfile.useQuery()
+  const { data: profile, refetch } = api.user.getProfile.useQuery();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -32,7 +32,7 @@ export default function ProfilePage() {
     specializations: [] as string[],
     businessName: "",
     businessType: "",
-  })
+  });
 
   // Update profile mutation
   const updateProfileMutation = api.user.updateProfile.useMutation({
@@ -40,18 +40,18 @@ export default function ProfilePage() {
       toast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated.",
-      })
-      setIsEditing(false)
-      refetch()
+      });
+      setIsEditing(false);
+      refetch();
     },
     onError: (error) => {
       toast({
         title: "Update Failed",
         description: error.message || "Failed to update profile.",
         variant: "destructive",
-      })
+      });
     },
-  })
+  });
 
   // Initialize form data when profile loads
   React.useEffect(() => {
@@ -62,46 +62,50 @@ export default function ProfilePage() {
         contactPhone: profile.contactPhone || "",
         contactEmail: profile.contactEmail || "",
         location: profile.location ? JSON.parse(profile.location) : null,
-        specializations: profile.specializations ? JSON.parse(profile.specializations) : [],
+        specializations: profile.specializations
+          ? JSON.parse(profile.specializations)
+          : [],
         businessName: profile.businessName || "",
         businessType: profile.businessType || "",
-      })
+      });
     }
-  }, [profile])
+  }, [profile]);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     updateProfileMutation.mutate({
       ...formData,
       location: formData.location ? JSON.stringify(formData.location) : null,
       specializations: JSON.stringify(formData.specializations),
-    })
-  }
+    });
+  };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
-    }))
-  }
+    }));
+  };
 
   const addSpecialization = (spec: string) => {
     if (spec && !formData.specializations.includes(spec)) {
       setFormData((prev) => ({
         ...prev,
         specializations: [...prev.specializations, spec],
-      }))
+      }));
     }
-  }
+  };
 
   const removeSpecialization = (spec: string) => {
     setFormData((prev) => ({
       ...prev,
       specializations: prev.specializations.filter((s) => s !== spec),
-    }))
-  }
+    }));
+  };
 
-  if (!session) return null
+  if (!session) return null;
 
   return (
     <div className="space-y-8">
@@ -110,9 +114,14 @@ export default function ProfilePage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Profile Settings</h1>
-            <p className="text-muted-foreground">Manage your account information and preferences</p>
+            <p className="text-muted-foreground">
+              Manage your account information and preferences
+            </p>
           </div>
-          <Button onClick={() => setIsEditing(!isEditing)} variant={isEditing ? "outline" : "default"}>
+          <Button
+            onClick={() => setIsEditing(!isEditing)}
+            variant={isEditing ? "outline" : "default"}
+          >
             {isEditing ? "Cancel" : "Edit Profile"}
           </Button>
         </div>
@@ -128,25 +137,38 @@ export default function ProfilePage() {
                 <div className="relative inline-block mb-4">
                   <div className="w-32 h-32 bg-gradient-primary rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-4xl">
-                      {formData.name?.charAt(0) || session.user.name?.charAt(0) || "U"}
+                      {formData.name?.charAt(0) ||
+                        session.user.name?.charAt(0) ||
+                        "U"}
                     </span>
                   </div>
                   {isEditing && (
-                    <Button size="sm" className="absolute bottom-0 right-0 rounded-full w-10 h-10 p-0">
+                    <Button
+                      size="sm"
+                      className="absolute bottom-0 right-0 rounded-full w-10 h-10 p-0"
+                    >
                       <Camera className="w-4 h-4" />
                     </Button>
                   )}
                 </div>
 
-                <h2 className="text-2xl font-bold mb-2">{formData.name || session.user.name || "User"}</h2>
+                <h2 className="text-2xl font-bold mb-2">
+                  {formData.name || session.user.name || "User"}
+                </h2>
                 <p className="text-muted-foreground mb-4">
-                  {session.user.role === "FARMER" ? "Farmer" : session.user.role === "SELLER" ? "Seller" : "Admin"}
+                  {session.user.role === "FARMER"
+                    ? "Farmer"
+                    : session.user.role === "SELLER"
+                    ? "Seller"
+                    : "Admin"}
                 </p>
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">{session.user.role === "FARMER" ? "12" : "8"}</div>
+                    <div className="text-2xl font-bold text-primary">
+                      {session.user.role === "FARMER" ? "12" : "8"}
+                    </div>
                     <div className="text-sm text-muted-foreground">
                       {session.user.role === "FARMER" ? "Products" : "Orders"}
                     </div>
@@ -175,7 +197,9 @@ export default function ProfilePage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Full Name</label>
+                      <label className="block text-sm font-medium mb-2">
+                        Full Name
+                      </label>
                       <Input
                         name="name"
                         value={formData.name}
@@ -185,13 +209,21 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Email</label>
-                      <Input value={session.user.email || ""} disabled className="bg-muted" />
+                      <label className="block text-sm font-medium mb-2">
+                        Email
+                      </label>
+                      <Input
+                        value={session.user.email || ""}
+                        disabled
+                        className="bg-muted"
+                      />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Description</label>
+                    <label className="block text-sm font-medium mb-2">
+                      Description
+                    </label>
                     <Textarea
                       name="description"
                       value={formData.description}
@@ -204,7 +236,9 @@ export default function ProfilePage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Phone Number</label>
+                      <label className="block text-sm font-medium mb-2">
+                        Phone Number
+                      </label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                         <Input
@@ -218,7 +252,9 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Contact Email</label>
+                      <label className="block text-sm font-medium mb-2">
+                        Contact Email
+                      </label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                         <Input
@@ -235,10 +271,14 @@ export default function ProfilePage() {
 
                   {/* Location */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">Location</label>
+                    <label className="block text-sm font-medium mb-2">
+                      Location
+                    </label>
                     <LocationPicker
                       value={formData.location}
-                      onChange={(location) => setFormData((prev) => ({ ...prev, location }))}
+                      onChange={(location) =>
+                        setFormData((prev) => ({ ...prev, location }))
+                      }
                       disabled={!isEditing}
                     />
                   </div>
@@ -252,7 +292,9 @@ export default function ProfilePage() {
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium mb-2">Business Name</label>
+                          <label className="block text-sm font-medium mb-2">
+                            Business Name
+                          </label>
                           <Input
                             name="businessName"
                             value={formData.businessName}
@@ -262,11 +304,18 @@ export default function ProfilePage() {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-2">Business Type</label>
+                          <label className="block text-sm font-medium mb-2">
+                            Business Type
+                          </label>
                           <select
                             name="businessType"
                             value={formData.businessType}
-                            onChange={(e) => setFormData((prev) => ({ ...prev, businessType: e.target.value }))}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                businessType: e.target.value,
+                              }))
+                            }
                             disabled={!isEditing}
                             className="w-full px-3 py-2 border border-input bg-background rounded-md"
                           >
@@ -311,9 +360,9 @@ export default function ProfilePage() {
                             placeholder="Add specialization"
                             onKeyPress={(e) => {
                               if (e.key === "Enter") {
-                                e.preventDefault()
-                                addSpecialization(e.currentTarget.value)
-                                e.currentTarget.value = ""
+                                e.preventDefault();
+                                addSpecialization(e.currentTarget.value);
+                                e.currentTarget.value = "";
                               }
                             }}
                           />
@@ -321,9 +370,10 @@ export default function ProfilePage() {
                             type="button"
                             variant="outline"
                             onClick={(e) => {
-                              const input = e.currentTarget.previousElementSibling as HTMLInputElement
-                              addSpecialization(input.value)
-                              input.value = ""
+                              const input = e.currentTarget
+                                .previousElementSibling as HTMLInputElement;
+                              addSpecialization(input.value);
+                              input.value = "";
                             }}
                           >
                             Add
@@ -335,7 +385,11 @@ export default function ProfilePage() {
 
                   {isEditing && (
                     <div className="flex justify-end space-x-4 pt-6 border-t">
-                      <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsEditing(false)}
+                      >
                         Cancel
                       </Button>
                       <Button
@@ -361,5 +415,5 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

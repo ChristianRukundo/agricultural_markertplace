@@ -1,61 +1,77 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useMemo } from "react"
-import { Search, Grid, List, MapPin, SlidersHorizontal, X, Map } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { StarRating } from "@/components/ui/star-rating"
-import { FadeIn } from "@/components/animations/fade-in"
-import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll"
-import { api } from "@/lib/trpc/client"
-import { cn } from "@/lib/utils"
+import { useState, useEffect, useMemo } from "react";
+import {
+  Search,
+  Grid,
+  List,
+  MapPin,
+  SlidersHorizontal,
+  X,
+  Map,
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/badge";
+import { StarRating } from "@/components/ui/star-rating";
+import { FadeIn } from "@/components/animations/fade-in";
+import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
+import { api } from "@/lib/trpc/client";
+import { cn } from "@/lib/utils";
 
 // Debounce hook
 function useDebounce(value: string, delay: number) {
-  const [debouncedValue, setDebouncedValue] = useState(value)
+  const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
+      setDebouncedValue(value);
+    }, delay);
 
     return () => {
-      clearTimeout(handler)
-    }
-  }, [value, delay])
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
 
-  return debouncedValue
+  return debouncedValue;
 }
 
 export default function ProductsPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState<string>("")
-  const [selectedDistrict, setSelectedDistrict] = useState<string>("")
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000])
-  const [sortBy, setSortBy] = useState<"createdAt" | "unitPrice" | "averageRating">("createdAt")
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
-  const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid")
-  const [showFilters, setShowFilters] = useState(false)
-  const [availableOnly, setAvailableOnly] = useState(false)
-  const [page, setPage] = useState(1)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
+  const [sortBy, setSortBy] = useState<
+    "createdAt" | "unitPrice" | "averageRating"
+  >("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid");
+  const [showFilters, setShowFilters] = useState(false);
+  const [availableOnly, setAvailableOnly] = useState(false);
+  const [page, setPage] = useState(1);
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // Fetch products with enhanced filtering
-  const productQueryInput: any = { page, limit: 12, sortBy, sortOrder }
-  if (debouncedSearchTerm) productQueryInput.search = debouncedSearchTerm
-  if (selectedCategory) productQueryInput.categoryId = selectedCategory
-  if (selectedDistrict) productQueryInput.district = selectedDistrict
-  if (priceRange[0] > 0) productQueryInput.minPrice = priceRange[0]
-  if (priceRange[1] < 100000) productQueryInput.maxPrice = priceRange[1]
-  if (availableOnly) productQueryInput.availableOnly = availableOnly
-  const { data: productsData, isLoading } = api.product.getProducts.useQuery(productQueryInput)
+  const productQueryInput: any = { page, limit: 12, sortBy, sortOrder };
+  if (debouncedSearchTerm) productQueryInput.search = debouncedSearchTerm;
+  if (selectedCategory) productQueryInput.categoryId = selectedCategory;
+  if (selectedDistrict) productQueryInput.district = selectedDistrict;
+  if (priceRange[0] > 0) productQueryInput.minPrice = priceRange[0];
+  if (priceRange[1] < 100000) productQueryInput.maxPrice = priceRange[1];
+  if (availableOnly) productQueryInput.availableOnly = availableOnly;
+  const { data: productsData, isLoading } =
+    api.product.getProducts.useQuery(productQueryInput);
 
   // Fetch categories
-  const categoryQueryInput: any = { page: 1, limit: 50, includeProductCount: true }
-  const { data: categoriesData } = api.category.getAll.useQuery(categoryQueryInput)
+  const categoryQueryInput: any = {
+    page: 1,
+    limit: 50,
+    includeProductCount: true,
+  };
+  const { data: categoriesData } =
+    api.category.getAll.useQuery(categoryQueryInput);
 
   const RWANDA_DISTRICTS = [
     "Kigali",
@@ -89,7 +105,7 @@ export default function ProductsPage() {
     "Kirehe",
     "Ngoma",
     "Bugesera",
-  ]
+  ];
 
   const SORT_OPTIONS = [
     { value: "createdAt", label: "Newest First", order: "desc" },
@@ -97,25 +113,25 @@ export default function ProductsPage() {
     { value: "unitPrice", label: "Price: Low to High", order: "asc" },
     { value: "unitPrice", label: "Price: High to Low", order: "desc" },
     { value: "averageRating", label: "Highest Rated", order: "desc" },
-  ]
+  ];
 
   const activeFiltersCount = useMemo(() => {
-    let count = 0
-    if (selectedCategory) count++
-    if (selectedDistrict) count++
-    if (priceRange[0] > 0 || priceRange[1] < 100000) count++
-    if (availableOnly) count++
-    return count
-  }, [selectedCategory, selectedDistrict, priceRange, availableOnly])
+    let count = 0;
+    if (selectedCategory) count++;
+    if (selectedDistrict) count++;
+    if (priceRange[0] > 0 || priceRange[1] < 100000) count++;
+    if (availableOnly) count++;
+    return count;
+  }, [selectedCategory, selectedDistrict, priceRange, availableOnly]);
 
   const clearAllFilters = () => {
-    setSelectedCategory("")
-    setSelectedDistrict("")
-    setPriceRange([0, 100000])
-    setAvailableOnly(false)
-    setSearchTerm("")
-    setPage(1)
-  }
+    setSelectedCategory("");
+    setSelectedDistrict("");
+    setPriceRange([0, 100000]);
+    setAvailableOnly(false);
+    setSearchTerm("");
+    setPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,16 +144,21 @@ export default function ProductsPage() {
                 Fresh <span className="gradient-text">Products</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Discover quality agricultural products directly from verified farmers across Rwanda
+                Discover quality agricultural products directly from verified
+                farmers across Rwanda
               </p>
               <div className="mt-6 flex items-center justify-center space-x-6 text-sm text-muted-foreground">
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-2" />
-                  <span>{productsData?.pagination.total || 0} Products Available</span>
+                  <span>
+                    {productsData?.pagination.total || 0} Products Available
+                  </span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-2" />
-                  <span>{categoriesData?.pagination.total || 0} Categories</span>
+                  <span>
+                    {categoriesData?.pagination.total || 0} Categories
+                  </span>
                 </div>
               </div>
             </div>
@@ -179,14 +200,17 @@ export default function ProductsPage() {
                       <select
                         value={`${sortBy}-${sortOrder}`}
                         onChange={(e) => {
-                          const [field, order] = e.target.value.split("-")
-                          setSortBy(field as typeof sortBy)
-                          setSortOrder(order as typeof sortOrder)
+                          const [field, order] = e.target.value.split("-");
+                          setSortBy(field as typeof sortBy);
+                          setSortOrder(order as typeof sortOrder);
                         }}
                         className="px-4 py-2 rounded-md border bg-background min-w-[150px]"
                       >
                         {SORT_OPTIONS.map((option, index) => (
-                          <option key={index} value={`${option.value}-${option.order}`}>
+                          <option
+                            key={index}
+                            value={`${option.value}-${option.order}`}
+                          >
                             {option.label}
                           </option>
                         ))}
@@ -243,10 +267,14 @@ export default function ProductsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {/* District Filter */}
                         <div>
-                          <label className="block text-sm font-medium mb-2">District</label>
+                          <label className="block text-sm font-medium mb-2">
+                            District
+                          </label>
                           <select
                             value={selectedDistrict}
-                            onChange={(e) => setSelectedDistrict(e.target.value)}
+                            onChange={(e) =>
+                              setSelectedDistrict(e.target.value)
+                            }
                             className="w-full px-3 py-2 rounded-md border bg-background"
                           >
                             <option value="">All Districts</option>
@@ -260,20 +288,34 @@ export default function ProductsPage() {
 
                         {/* Price Range */}
                         <div>
-                          <label className="block text-sm font-medium mb-2">Price Range (RWF)</label>
+                          <label className="block text-sm font-medium mb-2">
+                            Price Range (RWF)
+                          </label>
                           <div className="flex gap-2">
                             <Input
                               type="number"
                               placeholder="Min"
                               value={priceRange[0] || ""}
-                              onChange={(e) => setPriceRange([Number(e.target.value) || 0, priceRange[1]])}
+                              onChange={(e) =>
+                                setPriceRange([
+                                  Number(e.target.value) || 0,
+                                  priceRange[1],
+                                ])
+                              }
                               className="w-full"
                             />
                             <Input
                               type="number"
                               placeholder="Max"
-                              value={priceRange[1] === 100000 ? "" : priceRange[1]}
-                              onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value) || 100000])}
+                              value={
+                                priceRange[1] === 100000 ? "" : priceRange[1]
+                              }
+                              onChange={(e) =>
+                                setPriceRange([
+                                  priceRange[0],
+                                  Number(e.target.value) || 100000,
+                                ])
+                              }
                               className="w-full"
                             />
                           </div>
@@ -281,12 +323,16 @@ export default function ProductsPage() {
 
                         {/* Availability */}
                         <div>
-                          <label className="block text-sm font-medium mb-2">Availability</label>
+                          <label className="block text-sm font-medium mb-2">
+                            Availability
+                          </label>
                           <label className="flex items-center">
                             <input
                               type="checkbox"
                               checked={availableOnly}
-                              onChange={(e) => setAvailableOnly(e.target.checked)}
+                              onChange={(e) =>
+                                setAvailableOnly(e.target.checked)
+                              }
                               className="mr-2"
                             />
                             <span className="text-sm">In stock only</span>
@@ -312,29 +358,61 @@ export default function ProductsPage() {
                   {/* Active Filters Display */}
                   {activeFiltersCount > 0 && (
                     <div className="flex flex-wrap gap-2 pt-2 border-t">
-                      <span className="text-sm text-muted-foreground">Active filters:</span>
+                      <span className="text-sm text-muted-foreground">
+                        Active filters:
+                      </span>
                       {selectedCategory && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          Category: {categoriesData?.categories.find((c) => c.id === selectedCategory)?.name}
-                          <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedCategory("")} />
+                        <Badge
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
+                          Category:{" "}
+                          {
+                            categoriesData?.categories.find(
+                              (c) => c.id === selectedCategory
+                            )?.name
+                          }
+                          <X
+                            className="w-3 h-3 cursor-pointer"
+                            onClick={() => setSelectedCategory("")}
+                          />
                         </Badge>
                       )}
                       {selectedDistrict && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
+                        <Badge
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
                           District: {selectedDistrict}
-                          <X className="w-3 h-3 cursor-pointer" onClick={() => setSelectedDistrict("")} />
+                          <X
+                            className="w-3 h-3 cursor-pointer"
+                            onClick={() => setSelectedDistrict("")}
+                          />
                         </Badge>
                       )}
                       {(priceRange[0] > 0 || priceRange[1] < 100000) && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          Price: {priceRange[0].toLocaleString()} - {priceRange[1].toLocaleString()} RWF
-                          <X className="w-3 h-3 cursor-pointer" onClick={() => setPriceRange([0, 100000])} />
+                        <Badge
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
+                          Price: {priceRange[0].toLocaleString()} -{" "}
+                          {priceRange[1].toLocaleString()} RWF
+                          <X
+                            className="w-3 h-3 cursor-pointer"
+                            onClick={() => setPriceRange([0, 100000])}
+                          />
                         </Badge>
                       )}
                       {availableOnly && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
+                        <Badge
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
                           In stock only
-                          <X className="w-3 h-3 cursor-pointer" onClick={() => setAvailableOnly(false)} />
+                          <X
+                            className="w-3 h-3 cursor-pointer"
+                            onClick={() => setAvailableOnly(false)}
+                          />
                         </Badge>
                       )}
                     </div>
@@ -354,7 +432,9 @@ export default function ProductsPage() {
             <div className="text-muted-foreground">
               {isLoading
                 ? "Loading products..."
-                : `Showing ${productsData?.products.length || 0} of ${productsData?.pagination.total || 0} products`}
+                : `Showing ${productsData?.products.length || 0} of ${
+                    productsData?.pagination.total || 0
+                  } products`}
             </div>
           </div>
 
@@ -362,13 +442,20 @@ export default function ProductsPage() {
             <div
               className={cn(
                 "grid gap-6",
-                viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1",
+                viewMode === "grid"
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  : "grid-cols-1"
               )}
             >
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="animate-pulse">
                   <Card className="glassmorphism overflow-hidden">
-                    <div className={cn("bg-muted", viewMode === "grid" ? "aspect-video" : "h-48 md:h-32")} />
+                    <div
+                      className={cn(
+                        "bg-muted",
+                        viewMode === "grid" ? "aspect-video" : "h-48 md:h-32"
+                      )}
+                    />
                     <div className="p-6 space-y-3">
                       <div className="h-4 bg-muted rounded w-3/4" />
                       <div className="h-3 bg-muted rounded w-full" />
@@ -387,7 +474,9 @@ export default function ProductsPage() {
               <div
                 className={cn(
                   "grid gap-6",
-                  viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1",
+                  viewMode === "grid"
+                    ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                    : "grid-cols-1"
                 )}
               >
                 {productsData.products.map((product, index) => (
@@ -395,14 +484,16 @@ export default function ProductsPage() {
                     <Card
                       className={cn(
                         "glassmorphism overflow-hidden hover:scale-105 transition-all duration-300 group",
-                        viewMode === "list" && "flex flex-row",
+                        viewMode === "list" && "flex flex-row"
                       )}
                     >
                       {/* Product Image */}
                       <div
                         className={cn(
                           "bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 relative overflow-hidden",
-                          viewMode === "grid" ? "aspect-video" : "w-48 h-48 md:w-32 md:h-32 flex-shrink-0",
+                          viewMode === "grid"
+                            ? "aspect-video"
+                            : "w-48 h-48 md:w-32 md:h-32 flex-shrink-0"
                         )}
                       >
                         {product.imageUrls && product.imageUrls.length > 0 ? (
@@ -413,7 +504,9 @@ export default function ProductsPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-muted-foreground">No Image</span>
+                            <span className="text-muted-foreground">
+                              No Image
+                            </span>
                           </div>
                         )}
 
@@ -427,10 +520,16 @@ export default function ProductsPage() {
                         {/* Stock Status */}
                         <div className="absolute top-3 right-3">
                           <Badge
-                            variant={Number(product.quantityAvailable) > 0 ? "default" : "destructive"}
+                            variant={
+                              Number(product.quantityAvailable) > 0
+                                ? "default"
+                                : "destructive"
+                            }
                             className="text-xs"
                           >
-                            {Number(product.quantityAvailable) > 0 ? "In Stock" : "Out of Stock"}
+                            {Number(product.quantityAvailable) > 0
+                              ? "In Stock"
+                              : "Out of Stock"}
                           </Badge>
                         </div>
                       </div>
@@ -443,13 +542,21 @@ export default function ProductsPage() {
                           </h3>
                           {product._count.reviews > 0 && (
                             <div className="flex items-center ml-2">
-                              <StarRating rating={product._count.reviews} readonly size="sm" />
-                              <span className="text-xs text-muted-foreground ml-1">({product._count.reviews})</span>
+                              <StarRating
+                                rating={product._count.reviews}
+                                readonly
+                                size="sm"
+                              />
+                              <span className="text-xs text-muted-foreground ml-1">
+                                ({product._count.reviews})
+                              </span>
                             </div>
                           )}
                         </div>
 
-                        <p className="text-muted-foreground mb-4 line-clamp-2">{product.description}</p>
+                        <p className="text-muted-foreground mb-4 line-clamp-2">
+                          {product.description}
+                        </p>
 
                         {/* Farmer Info */}
                         <div className="flex items-center mb-4">
@@ -462,7 +569,8 @@ export default function ProductsPage() {
                               <MapPin className="w-3 h-3 mr-1" />
                               <span className="truncate">
                                 {product.farmer.profile?.location
-                                  ? JSON.parse(product.farmer.profile.location).district || "Rwanda"
+                                  ? JSON.parse(product.farmer.profile.location)
+                                      .district || "Rwanda"
                                   : "Rwanda"}
                               </span>
                             </div>
@@ -477,7 +585,11 @@ export default function ProductsPage() {
                             </span>
                           </div>
 
-                          <Button size="sm" className="bg-gradient-primary text-white" asChild>
+                          <Button
+                            size="sm"
+                            className="bg-gradient-primary text-white"
+                            asChild
+                          >
                             <a href={`/products/${product.id}`}>View Details</a>
                           </Button>
                         </div>
@@ -502,29 +614,37 @@ export default function ProductsPage() {
               {productsData.pagination.pages > 1 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between mt-12 gap-4">
                   <div className="text-sm text-muted-foreground">
-                    Page {productsData.pagination.page} of {productsData.pagination.pages}
+                    Page {productsData.pagination.page} of{" "}
+                    {productsData.pagination.pages}
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>
+                    <Button
+                      variant="outline"
+                      disabled={page === 1}
+                      onClick={() => setPage(page - 1)}
+                    >
                       Previous
                     </Button>
 
-                    {[...Array(Math.min(5, productsData.pagination.pages))].map((_, i) => {
-                      const pageNum = Math.max(1, page - 2) + i
-                      if (pageNum > productsData.pagination.pages) return null
+                    {[...Array(Math.min(5, productsData.pagination.pages))].map(
+                      (_, i) => {
+                        const pageNum = Math.max(1, page - 2) + i;
+                        if (pageNum > productsData.pagination.pages)
+                          return null;
 
-                      return (
-                        <Button
-                          key={pageNum}
-                          variant={page === pageNum ? "default" : "outline"}
-                          onClick={() => setPage(pageNum)}
-                          className="w-10"
-                        >
-                          {pageNum}
-                        </Button>
-                      )
-                    })}
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={page === pageNum ? "default" : "outline"}
+                            onClick={() => setPage(pageNum)}
+                            className="w-10"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      }
+                    )}
 
                     <Button
                       variant="outline"
@@ -549,7 +669,10 @@ export default function ProductsPage() {
                   : "No products are currently available. Check back later for new listings."}
               </p>
               {activeFiltersCount > 0 && (
-                <Button onClick={clearAllFilters} className="bg-gradient-primary text-white">
+                <Button
+                  onClick={clearAllFilters}
+                  className="bg-gradient-primary text-white"
+                >
                   Clear All Filters
                 </Button>
               )}
@@ -558,5 +681,5 @@ export default function ProductsPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }

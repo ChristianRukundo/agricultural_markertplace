@@ -14,9 +14,9 @@ import {
   Grid,
   List,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/badge";
 import { StarRating } from "@/components/ui/star-rating";
 import { FadeIn } from "@/components/animations/fade-in";
@@ -548,24 +548,37 @@ export default function FarmersPage() {
 
                             <div className="grid grid-cols-3 gap-4 py-4 border-t border-b text-center">
                               <div>
-                                <div className="font-bold text-primary">N/A</div>
-                                <div className="text-xs text-muted-foreground">Products</div>
+                                <div className="font-bold text-primary">
+                                  N/A
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  Products
+                                </div>
                               </div>
                               <div>
-                                <div className="font-bold text-primary">{farmer._count?.ordersAsFarmer || 0}</div>
-                                <div className="text-xs text-muted-foreground">Orders</div>
+                                <div className="font-bold text-primary">
+                                  {farmer._count?.ordersAsFarmer || 0}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  Orders
+                                </div>
                               </div>
                               <div>
                                 <div className="font-bold text-primary">
                                   {farmer.createdAt
                                     ? Math.floor(
-                                      (Date.now() - new Date(farmer.createdAt).getTime()) /
-                                      (1000 * 60 * 60 * 24 * 30),
-                                    )
+                                        (Date.now() -
+                                          new Date(
+                                            farmer.createdAt
+                                          ).getTime()) /
+                                          (1000 * 60 * 60 * 24 * 30)
+                                      )
                                     : 0}
                                   m
                                 </div>
-                                <div className="text-xs text-muted-foreground">Experience</div>
+                                <div className="text-xs text-muted-foreground">
+                                  Experience
+                                </div>
                               </div>
                             </div>
 

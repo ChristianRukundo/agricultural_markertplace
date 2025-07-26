@@ -13,7 +13,7 @@ import {
   Heart,
   AlertCircle,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { FadeIn } from "@/components/animations/fade-in";
 import { api } from "@/lib/trpc/client";
 import { cn } from "@/lib/utils";

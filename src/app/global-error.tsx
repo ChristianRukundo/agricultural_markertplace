@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { FadeIn } from "@/components/animations/fade-in"
+import { useEffect } from "react";
+import { Button } from "@/components/ui/Button";
+import { FadeIn } from "@/components/animations/fade-in";
 
 export default function GlobalError({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Global error:", error)
-  }, [error])
+    console.error("Global error:", error);
+  }, [error]);
 
   return (
     <html>
@@ -23,7 +23,12 @@ export default function GlobalError({
             <FadeIn>
               <div className="mb-8">
                 <div className="w-24 h-24 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center text-white mx-auto mb-6">
-                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-12 h-12"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -36,7 +41,8 @@ export default function GlobalError({
                   Something went wrong!
                 </h1>
                 <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
-                  We encountered an unexpected error. Our team has been notified and is working to fix this issue.
+                  We encountered an unexpected error. Our team has been notified
+                  and is working to fix this issue.
                 </p>
               </div>
 
@@ -70,7 +76,9 @@ export default function GlobalError({
                     )}
                     {error.stack && (
                       <details className="mt-4">
-                        <summary className="cursor-pointer font-medium">Stack Trace</summary>
+                        <summary className="cursor-pointer font-medium">
+                          Stack Trace
+                        </summary>
                         <pre className="mt-2 text-xs overflow-auto bg-red-100 dark:bg-red-900/40 p-3 rounded">
                           {error.stack}
                         </pre>
@@ -84,5 +92,5 @@ export default function GlobalError({
         </div>
       </body>
     </html>
-  )
+  );
 }

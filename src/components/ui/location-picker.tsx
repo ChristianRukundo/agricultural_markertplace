@@ -1,21 +1,26 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { MapPin, ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useState } from "react";
+import { MapPin, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface LocationData {
-  province: string
-  district: string
-  sector: string
-  cell?: string
+  province: string;
+  district: string;
+  sector: string;
+  cell?: string;
 }
 
 interface LocationPickerProps {
-  value: LocationData | null
-  onChange: (location: LocationData | null) => void
-  disabled?: boolean
+  value: LocationData | null;
+  onChange: (location: LocationData | null) => void;
+  disabled?: boolean;
 }
 
 const RWANDA_LOCATIONS = {
@@ -164,45 +169,56 @@ const RWANDA_LOCATIONS = {
     ],
   },
   // Add more provinces/districts as needed
-}
+};
 
-export function LocationPicker({ value, onChange, disabled = false }: LocationPickerProps) {
-  const [selectedProvince, setSelectedProvince] = useState(value?.province || "")
-  const [selectedDistrict, setSelectedDistrict] = useState(value?.district || "")
-  const [selectedSector, setSelectedSector] = useState(value?.sector || "")
+export function LocationPicker({
+  value,
+  onChange,
+  disabled = false,
+}: LocationPickerProps) {
+  const [selectedProvince, setSelectedProvince] = useState(
+    value?.province || ""
+  );
+  const [selectedDistrict, setSelectedDistrict] = useState(
+    value?.district || ""
+  );
+  const [selectedSector, setSelectedSector] = useState(value?.sector || "");
 
-  const provinces = Object.keys(RWANDA_LOCATIONS)
+  const provinces = Object.keys(RWANDA_LOCATIONS);
   const districts = selectedProvince
-    ? Object.keys(RWANDA_LOCATIONS[selectedProvince as keyof typeof RWANDA_LOCATIONS] || {})
-    : []
+    ? Object.keys(
+        RWANDA_LOCATIONS[selectedProvince as keyof typeof RWANDA_LOCATIONS] ||
+          {}
+      )
+    : [];
   const sectors =
     selectedProvince && selectedDistrict
       ? RWANDA_LOCATIONS[selectedProvince as keyof typeof RWANDA_LOCATIONS]?.[
           selectedDistrict as keyof (typeof RWANDA_LOCATIONS)[keyof typeof RWANDA_LOCATIONS]
         ] || []
-      : []
+      : [];
 
   const handleProvinceChange = (province: string) => {
-    setSelectedProvince(province)
-    setSelectedDistrict("")
-    setSelectedSector("")
-    onChange(null)
-  }
+    setSelectedProvince(province);
+    setSelectedDistrict("");
+    setSelectedSector("");
+    onChange(null);
+  };
 
   const handleDistrictChange = (district: string) => {
-    setSelectedDistrict(district)
-    setSelectedSector("")
-    onChange(null)
-  }
+    setSelectedDistrict(district);
+    setSelectedSector("");
+    onChange(null);
+  };
 
   const handleSectorChange = (sector: string) => {
-    setSelectedSector(sector)
+    setSelectedSector(sector);
     onChange({
       province: selectedProvince,
       district: selectedDistrict,
       sector: sector,
-    })
-  }
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -212,7 +228,11 @@ export function LocationPicker({ value, onChange, disabled = false }: LocationPi
           <label className="block text-sm font-medium mb-2">Province</label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full justify-between bg-transparent" disabled={disabled}>
+              <Button
+                variant="outline"
+                className="w-full justify-between bg-transparent"
+                disabled={disabled}
+              >
                 <span className="flex items-center">
                   <MapPin className="w-4 h-4 mr-2" />
                   {selectedProvince || "Select Province"}
@@ -222,7 +242,10 @@ export function LocationPicker({ value, onChange, disabled = false }: LocationPi
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-full">
               {provinces.map((province) => (
-                <DropdownMenuItem key={province} onClick={() => handleProvinceChange(province)}>
+                <DropdownMenuItem
+                  key={province}
+                  onClick={() => handleProvinceChange(province)}
+                >
                   {province}
                 </DropdownMenuItem>
               ))}
@@ -246,7 +269,10 @@ export function LocationPicker({ value, onChange, disabled = false }: LocationPi
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-full">
               {districts.map((district) => (
-                <DropdownMenuItem key={district} onClick={() => handleDistrictChange(district)}>
+                <DropdownMenuItem
+                  key={district}
+                  onClick={() => handleDistrictChange(district)}
+                >
                   {district}
                 </DropdownMenuItem>
               ))}
@@ -270,7 +296,10 @@ export function LocationPicker({ value, onChange, disabled = false }: LocationPi
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-full">
               {sectors.map((sector) => (
-                <DropdownMenuItem key={sector} onClick={() => handleSectorChange(sector)}>
+                <DropdownMenuItem
+                  key={sector}
+                  onClick={() => handleSectorChange(sector)}
+                >
                   {sector}
                 </DropdownMenuItem>
               ))}
@@ -291,5 +320,5 @@ export function LocationPicker({ value, onChange, disabled = false }: LocationPi
         </div>
       )}
     </div>
-  )
+  );
 }

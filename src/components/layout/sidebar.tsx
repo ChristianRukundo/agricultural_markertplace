@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useSession } from "next-auth/react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useState } from "react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   User,
@@ -24,12 +24,12 @@ import {
   HelpCircle,
   Menu,
   X,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import { api } from "@/lib/trpc/client"
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { api } from "@/lib/trpc/client";
 
 const NAVIGATION_ITEMS = {
   FARMER: [
@@ -49,9 +49,21 @@ const NAVIGATION_ITEMS = {
       label: "Products",
       icon: Package,
       children: [
-        { href: "/farmer/products", label: "My Products", description: "Manage your listings" },
-        { href: "/farmer/products/new", label: "Add Product", description: "Create new listing" },
-        { href: "/farmer/products/analytics", label: "Analytics", description: "Product performance" },
+        {
+          href: "/farmer/products",
+          label: "My Products",
+          description: "Manage your listings",
+        },
+        {
+          href: "/farmer/products/new",
+          label: "Add Product",
+          description: "Create new listing",
+        },
+        {
+          href: "/farmer/products/analytics",
+          label: "Analytics",
+          description: "Product performance",
+        },
       ],
     },
     {
@@ -137,19 +149,47 @@ const NAVIGATION_ITEMS = {
       label: "User Management",
       icon: Users,
       children: [
-        { href: "/admin/users", label: "All Users", description: "Manage user accounts" },
-        { href: "/admin/users/farmers", label: "Farmers", description: "Farmer accounts" },
-        { href: "/admin/users/sellers", label: "Sellers", description: "Seller accounts" },
-        { href: "/admin/users/verification", label: "Verification", description: "Pending verifications" },
+        {
+          href: "/admin/users",
+          label: "All Users",
+          description: "Manage user accounts",
+        },
+        {
+          href: "/admin/users/farmers",
+          label: "Farmers",
+          description: "Farmer accounts",
+        },
+        {
+          href: "/admin/users/sellers",
+          label: "Sellers",
+          description: "Seller accounts",
+        },
+        {
+          href: "/admin/users/verification",
+          label: "Verification",
+          description: "Pending verifications",
+        },
       ],
     },
     {
       label: "Content Management",
       icon: Package,
       children: [
-        { href: "/admin/products", label: "Products", description: "Manage all products" },
-        { href: "/admin/products/pending", label: "Pending Approval", description: "Review new products" },
-        { href: "/admin/categories", label: "Categories", description: "Manage categories" },
+        {
+          href: "/admin/products",
+          label: "Products",
+          description: "Manage all products",
+        },
+        {
+          href: "/admin/products/pending",
+          label: "Pending Approval",
+          description: "Review new products",
+        },
+        {
+          href: "/admin/categories",
+          label: "Categories",
+          description: "Manage categories",
+        },
       ],
     },
     {
@@ -183,61 +223,74 @@ const NAVIGATION_ITEMS = {
       description: "Platform settings",
     },
   ],
-}
+};
 
 export function Sidebar() {
-  const { data: session } = useSession()
-  const pathname = usePathname()
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [expandedItems, setExpandedItems] = useState<string[]>([])
+  const { data: session } = useSession();
+  const pathname = usePathname();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   // Get notification count
-  const { data: notificationStats } = api.notification.getStats.useQuery(undefined, {
-    enabled: !!session,
-  })
+  const { data: notificationStats } = api.notification.getStats.useQuery(
+    undefined,
+    {
+      enabled: !!session,
+    }
+  );
 
-  if (!session) return null
+  if (!session) return null;
 
-  const userRole = session.user.role as keyof typeof NAVIGATION_ITEMS
-  const navigationItems = NAVIGATION_ITEMS[userRole] || NAVIGATION_ITEMS.SELLER
+  const userRole = session.user.role as keyof typeof NAVIGATION_ITEMS;
+  const navigationItems = NAVIGATION_ITEMS[userRole] || NAVIGATION_ITEMS.SELLER;
 
   const toggleExpanded = (label: string) => {
-    setExpandedItems((prev) => (prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]))
-  }
+    setExpandedItems((prev) =>
+      prev.includes(label)
+        ? prev.filter((item) => item !== label)
+        : [...prev, label]
+    );
+  };
 
   const filteredItems = navigationItems.filter(
     (item) =>
       item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.children && item.children.some((child) => child.label.toLowerCase().includes(searchTerm.toLowerCase()))),
-  )
+      (item.children &&
+        item.children.some((child) =>
+          child.label.toLowerCase().includes(searchTerm.toLowerCase())
+        ))
+  );
 
   const getBadgeCount = (href: string) => {
     switch (href) {
       case "/notifications":
-        return notificationStats?.unreadCount || 0
+        return notificationStats?.unreadCount || 0;
       case "/messages":
-        return 2 // Mock data
+        return 2; // Mock data
       case "/farmer/orders":
-        return 3 // Mock data
+        return 3; // Mock data
       case "/seller/cart":
-        return 5 // Mock data
+        return 5; // Mock data
       default:
-        return 0
+        return 0;
     }
-  }
+  };
 
   return (
     <>
       {/* Mobile Overlay */}
       {!isCollapsed && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsCollapsed(true)} />
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsCollapsed(true)}
+        />
       )}
 
       <aside
         className={cn(
           "fixed left-0 top-16 h-[calc(100vh-4rem)] bg-card border-r border-border overflow-hidden transition-all duration-300 z-50",
-          isCollapsed ? "w-16" : "w-80",
+          isCollapsed ? "w-16" : "w-80"
         )}
       >
         <div className="flex flex-col h-full">
@@ -251,15 +304,29 @@ export function Sidebar() {
                     {session.user.role === "FARMER"
                       ? "Farmer Dashboard"
                       : session.user.role === "SELLER"
-                        ? "Seller Dashboard"
-                        : "Admin Dashboard"}
+                      ? "Seller Dashboard"
+                      : "Admin Dashboard"}
                   </p>
                 </div>
               )}
-              <Button variant="ghost" size="sm" onClick={() => setIsCollapsed(!isCollapsed)} className="lg:flex hidden">
-                {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="lg:flex hidden"
+              >
+                {isCollapsed ? (
+                  <ChevronRight className="w-4 h-4" />
+                ) : (
+                  <Menu className="w-4 h-4" />
+                )}
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setIsCollapsed(true)} className="lg:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsCollapsed(true)}
+                className="lg:hidden"
+              >
                 <X className="w-4 h-4" />
               </Button>
             </div>
@@ -328,9 +395,9 @@ export function Sidebar() {
                 )}
 
                 {filteredItems.map((item) => {
-                  const isActive = pathname === item.href
-                  const isExpanded = expandedItems.includes(item.label)
-                  const badgeCount = item.href ? getBadgeCount(item.href) : 0
+                  const isActive = pathname === item.href;
+                  const isExpanded = expandedItems.includes(item.label);
+                  const badgeCount = item.href ? getBadgeCount(item.href) : 0;
 
                   if (item.children) {
                     return (
@@ -340,7 +407,7 @@ export function Sidebar() {
                           className={cn(
                             "flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                             "text-muted-foreground hover:text-foreground hover:bg-muted",
-                            isCollapsed && "justify-center",
+                            isCollapsed && "justify-center"
                           )}
                         >
                           <div className="flex items-center space-x-3">
@@ -348,7 +415,12 @@ export function Sidebar() {
                             {!isCollapsed && <span>{item.label}</span>}
                           </div>
                           {!isCollapsed && (
-                            <ChevronDown className={cn("w-4 h-4 transition-transform", isExpanded && "rotate-180")} />
+                            <ChevronDown
+                              className={cn(
+                                "w-4 h-4 transition-transform",
+                                isExpanded && "rotate-180"
+                              )}
+                            />
                           )}
                         </button>
 
@@ -356,7 +428,7 @@ export function Sidebar() {
                         {!isCollapsed && isExpanded && (
                           <div className="ml-6 mt-1 space-y-1">
                             {item.children.map((child) => {
-                              const isChildActive = pathname === child.href
+                              const isChildActive = pathname === child.href;
                               return (
                                 <Link
                                   key={child.href}
@@ -365,21 +437,25 @@ export function Sidebar() {
                                     "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors",
                                     isChildActive
                                       ? "bg-primary text-primary-foreground font-medium"
-                                      : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
                                   )}
                                 >
                                   <div className="w-2 h-2 rounded-full bg-current opacity-50" />
                                   <div className="flex-1">
                                     <div>{child.label}</div>
-                                    {child.description && <div className="text-xs opacity-70">{child.description}</div>}
+                                    {child.description && (
+                                      <div className="text-xs opacity-70">
+                                        {child.description}
+                                      </div>
+                                    )}
                                   </div>
                                 </Link>
-                              )
+                              );
                             })}
                           </div>
                         )}
                       </div>
-                    )
+                    );
                   }
 
                   return (
@@ -391,7 +467,7 @@ export function Sidebar() {
                         isActive
                           ? "bg-primary text-primary-foreground"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted",
-                        isCollapsed && "justify-center",
+                        isCollapsed && "justify-center"
                       )}
                       title={isCollapsed ? item.label : undefined}
                     >
@@ -415,7 +491,7 @@ export function Sidebar() {
                         </Badge>
                       )}
                     </Link>
-                  )
+                  );
                 })}
               </div>
             </nav>
@@ -435,11 +511,17 @@ export function Sidebar() {
 
                 <div className="flex items-center space-x-3 px-3 py-2">
                   <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-white font-medium text-sm">{session.user.name?.charAt(0) || "U"}</span>
+                    <span className="text-white font-medium text-sm">
+                      {session.user.name?.charAt(0) || "U"}
+                    </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{session.user.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{session.user.email}</div>
+                    <div className="text-sm font-medium truncate">
+                      {session.user.name}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {session.user.email}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -451,7 +533,9 @@ export function Sidebar() {
                   </Link>
                 </Button>
                 <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium text-sm">{session.user.name?.charAt(0) || "U"}</span>
+                  <span className="text-white font-medium text-sm">
+                    {session.user.name?.charAt(0) || "U"}
+                  </span>
                 </div>
               </div>
             )}
@@ -464,13 +548,21 @@ export function Sidebar() {
         variant="ghost"
         size="sm"
         onClick={() => setIsCollapsed(false)}
-        className={cn("fixed bottom-4 left-4 z-40 lg:hidden", !isCollapsed && "hidden")}
+        className={cn(
+          "fixed bottom-4 left-4 z-40 lg:hidden",
+          !isCollapsed && "hidden"
+        )}
       >
         <Menu className="w-4 h-4" />
       </Button>
 
       {/* Spacer to prevent content from hiding behind sidebar */}
-      <div className={cn("transition-all duration-300 lg:block hidden", isCollapsed ? "w-16" : "w-80")} />
+      <div
+        className={cn(
+          "transition-all duration-300 lg:block hidden",
+          isCollapsed ? "w-16" : "w-80"
+        )}
+      />
     </>
-  )
+  );
 }

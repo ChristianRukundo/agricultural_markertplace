@@ -1,85 +1,102 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect, useRef } from "react"
-import { useSession } from "next-auth/react"
-import { Send, Search, Phone, Video, MoreVertical, Paperclip, Smile } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { FadeIn } from "@/components/animations/fade-in"
-import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll"
-import { useToast } from "@/hooks/use-toast"
-import { api } from "@/lib/trpc/client"
-import { cn } from "@/lib/utils"
+import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
+import {
+  Send,
+  Search,
+  Phone,
+  Video,
+  MoreVertical,
+  Paperclip,
+  Smile,
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/textarea";
+import { FadeIn } from "@/components/animations/fade-in";
+import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
+import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/trpc/client";
+import { cn } from "@/lib/utils";
 
 export default function MessagesPage() {
-  const { data: session } = useSession()
-  const { toast } = useToast()
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
-  const [messageText, setMessageText] = useState("")
-  const [searchTerm, setSearchTerm] = useState("")
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { data: session } = useSession();
+  const { toast } = useToast();
+  const [selectedConversation, setSelectedConversation] = useState<
+    string | null
+  >(null);
+  const [messageText, setMessageText] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch conversations
   const { data: conversationsData } = api.chat.getConversations.useQuery({
     page: 1,
     limit: 50,
-  })
+  });
 
   // Fetch messages for selected conversation
-  const { data: messagesData, refetch: refetchMessages } = api.chat.getMessages.useQuery(
-    {
-      chatSessionId: selectedConversation!,
-      page: 1,
-      limit: 50,
-    },
-    { enabled: !!selectedConversation },
-  )
+  const { data: messagesData, refetch: refetchMessages } =
+    api.chat.getMessages.useQuery(
+      {
+        chatSessionId: selectedConversation!,
+        page: 1,
+        limit: 50,
+      },
+      { enabled: !!selectedConversation }
+    );
 
   // Send message mutation
   const sendMessageMutation = api.chat.send.useMutation({
     onSuccess: () => {
-      setMessageText("")
-      refetchMessages()
+      setMessageText("");
+      refetchMessages();
       toast({
         title: "Message Sent",
         description: "Your message has been sent successfully.",
-      })
+      });
     },
     onError: (error) => {
       toast({
         title: "Failed to Send",
         description: error.message || "Failed to send message.",
         variant: "destructive",
-      })
+      });
     },
-  })
+  });
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messagesData])
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messagesData]);
 
   const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!messageText.trim() || !selectedConversation) return
+    e.preventDefault();
+    if (!messageText.trim() || !selectedConversation) return;
 
     sendMessageMutation.mutate({
       chatSessionId: selectedConversation,
-      content: messageText.trim()
-    })
-  }
+      content: messageText.trim(),
+    });
+  };
 
   const filteredConversations =
     conversationsData?.conversations.filter((conv) =>
-      conv.participants.some((p) => p.user.profile?.name?.toLowerCase().includes(searchTerm.toLowerCase())),
-    ) || []
+      conv.participants.some((p) =>
+        p.user.profile?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    ) || [];
 
-  const selectedConversationData = conversationsData?.conversations.find((conv) => conv.id === selectedConversation)
+  const selectedConversationData = conversationsData?.conversations.find(
+    (conv) => conv.id === selectedConversation
+  );
 
-  const otherParticipant = selectedConversationData?.participants.find((p) => p.userId !== session?.user.id)
+  const otherParticipant = selectedConversationData?.participants.find(
+    (p) => p.userId !== session?.user.id
+  );
 
   return (
     <div className="h-[calc(100vh-8rem)] flex">
@@ -103,9 +120,11 @@ export default function MessagesPage() {
         <div className="flex-1 overflow-y-auto">
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conversation, index) => {
-              const otherUser = conversation.participants.find((p) => p.userId !== session?.user.id)
-              const lastMessage = conversation.lastMessage
-              const isSelected = selectedConversation === conversation.id
+              const otherUser = conversation.participants.find(
+                (p) => p.userId !== session?.user.id
+              );
+              const lastMessage = conversation.lastMessage;
+              const isSelected = selectedConversation === conversation.id;
 
               return (
                 <SlideInOnScroll key={conversation.id} delay={index * 0.05}>
@@ -113,7 +132,7 @@ export default function MessagesPage() {
                     onClick={() => setSelectedConversation(conversation.id)}
                     className={cn(
                       "p-4 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors",
-                      isSelected && "bg-primary/10 border-primary/20",
+                      isSelected && "bg-primary/10 border-primary/20"
                     )}
                   >
                     <div className="flex items-start space-x-3">
@@ -126,10 +145,14 @@ export default function MessagesPage() {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-medium truncate">{otherUser?.user.profile?.name || "Unknown User"}</h3>
+                          <h3 className="font-medium truncate">
+                            {otherUser?.user.profile?.name || "Unknown User"}
+                          </h3>
                           {lastMessage && (
                             <span className="text-xs text-muted-foreground">
-                              {new Date(lastMessage.timestamp).toLocaleTimeString([], {
+                              {new Date(
+                                lastMessage.timestamp
+                              ).toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })}
@@ -139,7 +162,9 @@ export default function MessagesPage() {
 
                         {lastMessage && (
                           <p className="text-sm text-muted-foreground truncate">
-                            {lastMessage.senderId === session?.user.id ? "You: " : ""}
+                            {lastMessage.senderId === session?.user.id
+                              ? "You: "
+                              : ""}
                             {lastMessage.content}
                           </p>
                         )}
@@ -155,7 +180,7 @@ export default function MessagesPage() {
                     </div>
                   </div>
                 </SlideInOnScroll>
-              )
+              );
             })
           ) : (
             <div className="p-8 text-center">
@@ -179,9 +204,13 @@ export default function MessagesPage() {
                     </span>
                   </div>
                   <div>
-                    <h2 className="font-semibold">{otherParticipant?.user.profile?.name || "Unknown User"}</h2>
+                    <h2 className="font-semibold">
+                      {otherParticipant?.user.profile?.name || "Unknown User"}
+                    </h2>
                     <p className="text-sm text-muted-foreground">
-                      {otherParticipant?.user.role === "FARMER" ? "Farmer" : "Seller"}
+                      {otherParticipant?.user.role === "FARMER"
+                        ? "Farmer"
+                        : "Seller"}
                     </p>
                   </div>
                 </div>
@@ -203,21 +232,41 @@ export default function MessagesPage() {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messagesData?.messages.map((message, index) => {
-                const isOwn = message.senderId === session?.user.id
-                const showAvatar = index === 0 || messagesData.messages?.[index - 1]?.senderId !== message.senderId
+                const isOwn = message.senderId === session?.user.id;
+                const showAvatar =
+                  index === 0 ||
+                  messagesData.messages?.[index - 1]?.senderId !==
+                    message.senderId;
 
                 return (
                   <SlideInOnScroll key={message.id} delay={index * 0.02}>
-                    <div className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
-                      <div className={cn("flex max-w-[70%]", isOwn ? "flex-row-reverse" : "flex-row")}>
+                    <div
+                      className={cn(
+                        "flex",
+                        isOwn ? "justify-end" : "justify-start"
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "flex max-w-[70%]",
+                          isOwn ? "flex-row-reverse" : "flex-row"
+                        )}
+                      >
                         {/* Avatar */}
-                        <div className={cn("w-8 h-8 flex-shrink-0", isOwn ? "ml-2" : "mr-2")}>
+                        <div
+                          className={cn(
+                            "w-8 h-8 flex-shrink-0",
+                            isOwn ? "ml-2" : "mr-2"
+                          )}
+                        >
                           {showAvatar && (
                             <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
                               <span className="text-white text-sm font-medium">
                                 {isOwn
                                   ? session?.user.name?.charAt(0) || "Y"
-                                  : otherParticipant?.user.profile?.name?.charAt(0) || "U"}
+                                  : otherParticipant?.user.profile?.name?.charAt(
+                                      0
+                                    ) || "U"}
                               </span>
                             </div>
                           )}
@@ -227,33 +276,43 @@ export default function MessagesPage() {
                         <div
                           className={cn(
                             "px-4 py-2 rounded-2xl",
-                            isOwn ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted rounded-bl-md",
+                            isOwn
+                              ? "bg-primary text-primary-foreground rounded-br-md"
+                              : "bg-muted rounded-bl-md"
                           )}
                         >
                           <p className="text-sm">{message.content}</p>
                           <p
                             className={cn(
                               "text-xs mt-1",
-                              isOwn ? "text-primary-foreground/70" : "text-muted-foreground",
+                              isOwn
+                                ? "text-primary-foreground/70"
+                                : "text-muted-foreground"
                             )}
                           >
-                            {new Date(message.createdAt).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            {new Date(message.createdAt).toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
                           </p>
                         </div>
                       </div>
                     </div>
                   </SlideInOnScroll>
-                )
+                );
               })}
               <div ref={messagesEndRef} />
             </div>
 
             {/* Message Input */}
             <div className="p-4 border-t border-border">
-              <form onSubmit={handleSendMessage} className="flex items-end space-x-2">
+              <form
+                onSubmit={handleSendMessage}
+                className="flex items-end space-x-2"
+              >
                 <div className="flex-1">
                   <Textarea
                     value={messageText}
@@ -263,8 +322,8 @@ export default function MessagesPage() {
                     className="resize-none"
                     onKeyPress={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSendMessage(e)
+                        e.preventDefault();
+                        handleSendMessage(e);
                       }
                     }}
                   />
@@ -279,7 +338,9 @@ export default function MessagesPage() {
                   <Button
                     type="submit"
                     size="sm"
-                    disabled={!messageText.trim() || sendMessageMutation.isPending}
+                    disabled={
+                      !messageText.trim() || sendMessageMutation.isPending
+                    }
                     className="bg-gradient-primary text-white"
                   >
                     <Send className="w-4 h-4" />
@@ -294,12 +355,16 @@ export default function MessagesPage() {
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                 <Send className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Select a conversation</h3>
-              <p className="text-muted-foreground">Choose a conversation from the list to start messaging</p>
+              <h3 className="text-xl font-semibold mb-2">
+                Select a conversation
+              </h3>
+              <p className="text-muted-foreground">
+                Choose a conversation from the list to start messaging
+              </p>
             </div>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,44 +1,56 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useEffect, useRef, useState } from "react"
-import Link from "next/link"
-import { ArrowRight, Users, Leaf, TrendingUp, Star, CheckCircle, Mail, Play } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import { FadeIn } from "@/components/animations/fade-in"
-import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll"
-import { useGSAP } from "@/components/providers/gsap-provider"
-import { useToast } from "@/hooks/use-toast"
-import { api } from "@/lib/trpc/client"
-import { useSession } from "next-auth/react"
-import { FullScreenLoader } from "@/components/ui/loader"
-import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Users,
+  Leaf,
+  TrendingUp,
+  Star,
+  CheckCircle,
+  Mail,
+  Play,
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
+import { FadeIn } from "@/components/animations/fade-in";
+import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
+import { useGSAP } from "@/components/providers/gsap-provider";
+import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/trpc/client";
+import { useSession } from "next-auth/react";
+import { FullScreenLoader } from "@/components/ui/loader";
+import { useRouter } from "next/navigation";
 
 const FEATURES = [
   {
     icon: <Users className="w-8 h-8" />,
     title: "Direct Connection",
-    description: "Connect farmers directly with sellers, eliminating middlemen and ensuring fair prices for everyone.",
+    description:
+      "Connect farmers directly with sellers, eliminating middlemen and ensuring fair prices for everyone.",
     stats: "5,000+ connections made",
   },
   {
     icon: <Leaf className="w-8 h-8" />,
     title: "Fresh & Quality",
-    description: "Get the freshest produce directly from verified farmers with quality guarantees and traceability.",
+    description:
+      "Get the freshest produce directly from verified farmers with quality guarantees and traceability.",
     stats: "99% satisfaction rate",
   },
   {
     icon: <TrendingUp className="w-8 h-8" />,
     title: "Market Growth",
-    description: "Help grow the agricultural market with transparent pricing, reliable transactions, and fair trade.",
+    description:
+      "Help grow the agricultural market with transparent pricing, reliable transactions, and fair trade.",
     stats: "40% income increase",
   },
-]
+];
 
 const TESTIMONIALS = [
   {
@@ -71,85 +83,119 @@ const TESTIMONIALS = [
     location: "Huye District",
     verified: true,
   },
-]
+];
 
 const PLATFORM_STATS = [
-  { number: "5,000+", label: "Active Farmers", description: "Verified farmers across Rwanda" },
-  { number: "2,500+", label: "Registered Sellers", description: "Restaurants, stores, and wholesalers" },
-  { number: "50,000+", label: "Successful Orders", description: "Completed transactions" },
-  { number: "30", label: "Districts Covered", description: "Nationwide coverage" },
-]
+  {
+    number: "5,000+",
+    label: "Active Farmers",
+    description: "Verified farmers across Rwanda",
+  },
+  {
+    number: "2,500+",
+    label: "Registered Sellers",
+    description: "Restaurants, stores, and wholesalers",
+  },
+  {
+    number: "50,000+",
+    label: "Successful Orders",
+    description: "Completed transactions",
+  },
+  {
+    number: "30",
+    label: "Districts Covered",
+    description: "Nationwide coverage",
+  },
+];
 
 export default function HomePage() {
-  const heroRef = useRef<HTMLDivElement>(null)
-  const [email, setEmail] = useState("")
-  const gsap = useGSAP()
-  const { toast } = useToast()
-  const { data: productsData, isLoading: productsLoading } = api.product.getProducts.useQuery({
-    page: 1,
-    limit: 6,
-    sortBy: "createdAt",
-    sortOrder: "desc",
-  })
-  const router = useRouter()
-  const { status } = useSession()
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [email, setEmail] = useState("");
+  const gsap = useGSAP();
+  const { toast } = useToast();
+  const { data: productsData, isLoading: productsLoading } =
+    api.product.getProducts.useQuery({
+      page: 1,
+      limit: 6,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+    });
+  const router = useRouter();
+  const { status } = useSession();
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/dashboard")
+      router.replace("/dashboard");
     }
-  }, [status, router])
+  }, [status, router]);
 
   const newsletterMutation = api.newsletter.subscribe.useMutation({
     onSuccess: () => {
       toast({
         title: "Subscribed!",
         description: "Thank you for subscribing to our newsletter.",
-      })
-      setEmail("")
+      });
+      setEmail("");
     },
     onError: (error) => {
       toast({
         title: "Subscription Failed",
         description: error.message || "Please try again later.",
         variant: "destructive",
-      })
+      });
     },
-  })
+  });
 
   useEffect(() => {
-    if (!heroRef.current) return
+    if (!heroRef.current) return;
 
-    if (!gsap) return
-    const tl = gsap.timeline()
+    if (!gsap) return;
+    const tl = gsap.timeline();
 
-    tl.fromTo(".hero-title", { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" })
-      .fromTo(".hero-subtitle", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, "-=0.4")
+    tl.fromTo(
+      ".hero-title",
+      { opacity: 0, y: 50 },
+      { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }
+    )
+      .fromTo(
+        ".hero-subtitle",
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
+        "-=0.4"
+      )
       .fromTo(
         ".hero-cta",
         { opacity: 0, scale: 0.9 },
         { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.7)" },
-        "-=0.2",
+        "-=0.2"
       )
-      .fromTo(".hero-video", { opacity: 0, x: 50 }, { opacity: 1, x: 0, duration: 0.6, ease: "power2.out" }, "-=0.3")
-  }, [gsap])
+      .fromTo(
+        ".hero-video",
+        { opacity: 0, x: 50 },
+        { opacity: 1, x: 0, duration: 0.6, ease: "power2.out" },
+        "-=0.3"
+      );
+  }, [gsap]);
 
   if (status === "loading" || status === "authenticated") {
-    return <FullScreenLoader />
+    return <FullScreenLoader />;
   }
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email.trim()) return
-    newsletterMutation.mutate({ email: email.trim() })
-  }
+    e.preventDefault();
+    if (!email.trim()) return;
+    newsletterMutation.mutate({ email: email.trim() });
+  };
 
   return (
     <div className="min-h-screen">
       <Header />
 
       {/* Enhanced Hero Section */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section
+        ref={heroRef}
+        className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      >
         {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-blue-50 to-yellow-50 dark:from-green-950 dark:via-blue-950 dark:to-yellow-950" />
         <div className="absolute inset-0 bg-[url('/placeholder.svg?height=1080&width=1920')] bg-cover bg-center opacity-10" />
@@ -167,21 +213,29 @@ export default function HomePage() {
 
               <FadeIn delay={0.2}>
                 <p className="hero-subtitle text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl">
-                  Join Rwanda's premier agricultural marketplace where farmers meet sellers directly, ensuring fresh
-                  produce, fair prices, and sustainable growth for all.
+                  Join Rwanda's premier agricultural marketplace where farmers
+                  meet sellers directly, ensuring fresh produce, fair prices,
+                  and sustainable growth for all.
                 </p>
               </FadeIn>
 
               <FadeIn delay={0.4}>
                 <div className="hero-cta flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
                   <Link href="/auth/register">
-                    <Button size="lg" className="bg-gradient-primary text-white px-8 py-4 text-lg">
+                    <Button
+                      size="lg"
+                      className="bg-gradient-primary text-white px-8 py-4 text-lg"
+                    >
                       Get Started Today
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </Button>
                   </Link>
                   <Link href="/products">
-                    <Button variant="outline" size="lg" className="px-8 py-4 text-lg bg-transparent">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="px-8 py-4 text-lg bg-transparent"
+                    >
                       Browse Products
                     </Button>
                   </Link>
@@ -216,7 +270,10 @@ export default function HomePage() {
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <Button size="lg" className="rounded-full w-16 h-16 bg-white/90 hover:bg-white text-primary">
+                      <Button
+                        size="lg"
+                        className="rounded-full w-16 h-16 bg-white/90 hover:bg-white text-primary"
+                      >
                         <Play className="w-6 h-6 ml-1" />
                       </Button>
                     </div>
@@ -244,7 +301,9 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <SlideInOnScroll>
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">Our Growing Impact</h2>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4">
+                Our Growing Impact
+              </h2>
               <p className="text-xl opacity-90 max-w-2xl mx-auto">
                 Real numbers that showcase our thriving agricultural community
               </p>
@@ -255,7 +314,9 @@ export default function HomePage() {
             {PLATFORM_STATS.map((stat, index) => (
               <SlideInOnScroll key={index} delay={index * 0.1}>
                 <div className="text-center">
-                  <div className="text-4xl md:text-5xl font-bold mb-2">{stat.number}</div>
+                  <div className="text-4xl md:text-5xl font-bold mb-2">
+                    {stat.number}
+                  </div>
                   <div className="text-lg font-medium mb-1">{stat.label}</div>
                   <div className="text-sm opacity-80">{stat.description}</div>
                 </div>
@@ -274,7 +335,8 @@ export default function HomePage() {
                 Why Choose <span className="gradient-text">AgriConnect</span>?
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                We're revolutionizing agriculture in Rwanda by creating direct connections between farmers and sellers.
+                We're revolutionizing agriculture in Rwanda by creating direct
+                connections between farmers and sellers.
               </p>
             </div>
           </SlideInOnScroll>
@@ -283,10 +345,16 @@ export default function HomePage() {
             {FEATURES.map((feature, index) => (
               <SlideInOnScroll key={index} direction="up" className="h-full">
                 <Card className="glassmorphism p-8 h-full hover:scale-105 transition-transform duration-300 group">
-                  <div className="text-primary mb-4 group-hover:scale-110 transition-transform">{feature.icon}</div>
+                  <div className="text-primary mb-4 group-hover:scale-110 transition-transform">
+                    {feature.icon}
+                  </div>
                   <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
-                  <p className="text-muted-foreground mb-4">{feature.description}</p>
-                  <div className="text-sm font-medium text-primary">{feature.stats}</div>
+                  <p className="text-muted-foreground mb-4">
+                    {feature.description}
+                  </p>
+                  <div className="text-sm font-medium text-primary">
+                    {feature.stats}
+                  </div>
                 </Card>
               </SlideInOnScroll>
             ))}
@@ -295,7 +363,8 @@ export default function HomePage() {
       </section>
 
       {/* Enhanced Featured Products */}
-      {(productsData?.products && productsData.products.length > 0) || productsLoading ? (
+      {(productsData?.products && productsData.products.length > 0) ||
+      productsLoading ? (
         <section className="py-20 bg-muted/30">
           <div className="container mx-auto px-4">
             <SlideInOnScroll>
@@ -303,7 +372,9 @@ export default function HomePage() {
                 <h2 className="text-4xl md:text-5xl font-bold mb-4">
                   Featured <span className="gradient-text">Products</span>
                 </h2>
-                <p className="text-xl text-muted-foreground">Discover fresh, quality produce from verified farmers</p>
+                <p className="text-xl text-muted-foreground">
+                  Discover fresh, quality produce from verified farmers
+                </p>
               </div>
             </SlideInOnScroll>
 
@@ -353,16 +424,23 @@ export default function HomePage() {
                         <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
                           {product.name}
                         </h3>
-                        <p className="text-muted-foreground mb-4 line-clamp-2">{product.description}</p>
+                        <p className="text-muted-foreground mb-4 line-clamp-2">
+                          {product.description}
+                        </p>
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="text-2xl font-bold text-primary">
                               RWF {Number(product.unitPrice).toLocaleString()}
                             </span>
-                            <span className="text-sm text-muted-foreground ml-1">/{Number(product.quantityAvailable)}</span>
+                            <span className="text-sm text-muted-foreground ml-1">
+                              /{Number(product.quantityAvailable)}
+                            </span>
                           </div>
                           <Link href={`/products/${product.id}`}>
-                            <Button size="sm" className="bg-gradient-primary text-white">
+                            <Button
+                              size="sm"
+                              className="bg-gradient-primary text-white"
+                            >
                               View Details
                             </Button>
                           </Link>
@@ -395,7 +473,8 @@ export default function HomePage() {
                 What Our <span className="gradient-text">Community</span> Says
               </h2>
               <p className="text-xl text-muted-foreground">
-                Real stories from farmers and sellers who've transformed their businesses
+                Real stories from farmers and sellers who've transformed their
+                businesses
               </p>
             </div>
           </SlideInOnScroll>
@@ -406,19 +485,30 @@ export default function HomePage() {
                 <Card className="glassmorphism p-8 h-full hover:scale-105 transition-transform duration-300">
                   <div className="flex items-center mb-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                      <Star
+                        key={i}
+                        className="w-5 h-5 text-yellow-400 fill-current"
+                      />
                     ))}
                   </div>
-                  <p className="text-muted-foreground mb-6 italic leading-relaxed">"{testimonial.content}"</p>
+                  <p className="text-muted-foreground mb-6 italic leading-relaxed">
+                    "{testimonial.content}"
+                  </p>
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-gradient-primary rounded-full mr-4 flex-shrink-0" />
                     <div className="flex-1">
                       <div className="flex items-center">
                         <h4 className="font-bold">{testimonial.name}</h4>
-                        {testimonial.verified && <CheckCircle className="w-4 h-4 text-green-500 ml-2" />}
+                        {testimonial.verified && (
+                          <CheckCircle className="w-4 h-4 text-green-500 ml-2" />
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                      <p className="text-xs text-muted-foreground">{testimonial.location}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {testimonial.role}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {testimonial.location}
+                      </p>
                     </div>
                   </div>
                 </Card>
@@ -435,11 +525,17 @@ export default function HomePage() {
             <Card className="glassmorphism max-w-4xl mx-auto">
               <div className="p-12 text-center">
                 <Mail className="w-16 h-16 text-primary mx-auto mb-6" />
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">Stay Updated</h2>
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                  Stay Updated
+                </h2>
                 <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  Get the latest updates on new products, market trends, and platform features delivered to your inbox.
+                  Get the latest updates on new products, market trends, and
+                  platform features delivered to your inbox.
                 </p>
-                <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                <form
+                  onSubmit={handleNewsletterSubmit}
+                  className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto"
+                >
                   <Input
                     type="email"
                     placeholder="Enter your email"
@@ -453,7 +549,9 @@ export default function HomePage() {
                     disabled={newsletterMutation.isPending}
                     className="bg-gradient-primary text-white"
                   >
-                    {newsletterMutation.isPending ? "Subscribing..." : "Subscribe"}
+                    {newsletterMutation.isPending
+                      ? "Subscribing..."
+                      : "Subscribe"}
                   </Button>
                 </form>
                 <p className="text-sm text-muted-foreground mt-4">
@@ -469,13 +567,20 @@ export default function HomePage() {
       <section className="py-20 bg-gradient-primary text-white">
         <div className="container mx-auto px-4 text-center">
           <SlideInOnScroll>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Transform Your Agricultural Business?</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Ready to Transform Your Agricultural Business?
+            </h2>
             <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-              Join thousands of farmers and sellers who are already benefiting from direct trade relationships.
+              Join thousands of farmers and sellers who are already benefiting
+              from direct trade relationships.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Link href="/auth/register">
-                <Button size="lg" variant="secondary" className="px-8 py-4 text-lg">
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="px-8 py-4 text-lg"
+                >
                   Join as Farmer
                   <CheckCircle className="ml-2 w-5 h-5" />
                 </Button>
@@ -511,5 +616,5 @@ export default function HomePage() {
 
       <Footer />
     </div>
-  )
+  );
 }
