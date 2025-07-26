@@ -1,30 +1,32 @@
-/**
- * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
- * for Docker builds.
- */
-await import("./src/env.js");
-
-/** @type {import("next").NextConfig} */
-const config = {
-  output: "standalone",
-  experimental: {
-    serverComponentsExternalPackages: ["@prisma/client"],
-  },
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-      },
-    ],
-    unoptimized: true,
-  },
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
+  images: {
+    domains: ["images.unsplash.com", "plus.unsplash.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "plus.unsplash.com",
+      },
+    ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: process.env.NEXT_PUBLIC_API_URL + "/:path*",
+      },
+    ];
+  },
 };
 
-export default config;
+export default nextConfig;
