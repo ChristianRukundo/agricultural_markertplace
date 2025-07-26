@@ -8,7 +8,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL") // Crucial for migrations
+  directUrl = env("DIRECT_URL")
 }
 
 enum UserRole {
@@ -61,6 +61,13 @@ enum NotificationType {
   MESSAGE_RECEIVED
   REVIEW_RECEIVED
   SYSTEM_ANNOUNCEMENT
+  
+  ORDER_PLACED
+  ORDER_CONFIRMED
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  PRODUCT_APPROVED
+  PRODUCT_REJECTED
 }
 
 model User {
@@ -74,18 +81,18 @@ model User {
   updatedAt    DateTime @updatedAt
 
   // Relations
-  profile              Profile?
-  sentMessages         ChatMessage[]  @relation("MessageSender")
-  chatSessions1        ChatSession[]  @relation("ChatParticipant1")
-  chatSessions2        ChatSession[]  @relation("ChatParticipant2")
-  reviews              Review[]       @relation("ReviewAuthor")
-  notifications        Notification[]
-  ordersAsSeller       Order[]        @relation("OrderSeller")
-  ordersAsFarmer       Order[]        @relation("OrderFarmer")
-  accounts             Account[]
-  sessions             Session[]
-  cart                 Cart?
-  savedProducts        SavedProduct[]
+  profile        Profile?
+  sentMessages   ChatMessage[]  @relation("MessageSender")
+  chatSessions1  ChatSession[]  @relation("ChatParticipant1")
+  chatSessions2  ChatSession[]  @relation("ChatParticipant2")
+  reviews        Review[]       @relation("ReviewAuthor")
+  notifications  Notification[]
+  ordersAsSeller Order[]        @relation("OrderSeller")
+  ordersAsFarmer Order[]        @relation("OrderFarmer")
+  accounts       Account[]
+  sessions       Session[]
+  cart           Cart?
+  savedProducts  SavedProduct[]
 
   @@index([email])
   @@index([phoneNumber])
@@ -132,8 +139,8 @@ model VerificationToken {
 }
 
 model Profile {
-  id                String  @id @default(cuid())
-  userId            String  @unique
+  id                String   @id @default(cuid())
+  userId            String   @unique
   name              String
   location          String // JSON string for structured Rwandan location
   description       String?
@@ -190,12 +197,12 @@ model SellerProfile {
 }
 
 model Category {
-  id          String    @id @default(cuid())
-  name        String    @unique
+  id          String   @id @default(cuid())
+  name        String   @unique
   description String?
   imageUrl    String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relations
   products Product[]
@@ -242,7 +249,7 @@ model Order {
   deliveryAddress String
   paymentStatus   PaymentStatus @default(PENDING)
   paymentRefId    String?
-  deliveryFee     Decimal       @db.Decimal(10, 2) @default(0)
+  deliveryFee     Decimal       @default(0) @db.Decimal(10, 2)
   notes           String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -329,7 +336,7 @@ model Review {
   updatedAt          DateTime         @updatedAt
 
   // Relations
-  reviewer User    @relation("ReviewAuthor", fields: [reviewerId], references: [id])
+  reviewer User     @relation("ReviewAuthor", fields: [reviewerId], references: [id])
   product  Product? @relation(fields: [reviewedEntityId], references: [id])
 
   @@index([reviewedEntityId])

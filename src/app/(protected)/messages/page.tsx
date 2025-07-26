@@ -23,15 +23,15 @@ export default function MessagesPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Fetch conversations
-  const { data: conversationsData } = api.message.getConversations.useQuery({
+  const { data: conversationsData } = api.chat.getConversations.useQuery({
     page: 1,
     limit: 50,
   })
 
   // Fetch messages for selected conversation
-  const { data: messagesData, refetch: refetchMessages } = api.message.getMessages.useQuery(
+  const { data: messagesData, refetch: refetchMessages } = api.chat.getMessages.useQuery(
     {
-      conversationId: selectedConversation!,
+      chatSessionId: selectedConversation!,
       page: 1,
       limit: 50,
     },
@@ -39,7 +39,7 @@ export default function MessagesPage() {
   )
 
   // Send message mutation
-  const sendMessageMutation = api.message.send.useMutation({
+  const sendMessageMutation = api.chat.send.useMutation({
     onSuccess: () => {
       setMessageText("")
       refetchMessages()
@@ -67,9 +67,8 @@ export default function MessagesPage() {
     if (!messageText.trim() || !selectedConversation) return
 
     sendMessageMutation.mutate({
-      conversationId: selectedConversation,
-      content: messageText.trim(),
-      messageType: "TEXT",
+      chatSessionId: selectedConversation,
+      content: messageText.trim()
     })
   }
 
@@ -130,7 +129,7 @@ export default function MessagesPage() {
                           <h3 className="font-medium truncate">{otherUser?.user.profile?.name || "Unknown User"}</h3>
                           {lastMessage && (
                             <span className="text-xs text-muted-foreground">
-                              {new Date(lastMessage.createdAt).toLocaleTimeString([], {
+                              {new Date(lastMessage.timestamp).toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })}
@@ -205,7 +204,7 @@ export default function MessagesPage() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messagesData?.messages.map((message, index) => {
                 const isOwn = message.senderId === session?.user.id
-                const showAvatar = index === 0 || messagesData.messages[index - 1].senderId !== message.senderId
+                const showAvatar = index === 0 || messagesData.messages?.[index - 1]?.senderId !== message.senderId
 
                 return (
                   <SlideInOnScroll key={message.id} delay={index * 0.02}>
