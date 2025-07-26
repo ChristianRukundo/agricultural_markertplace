@@ -469,7 +469,6 @@ export default function ContactPage() {
                         placeholder="Please provide as much detail as possible about your inquiry..."
                       />
                     </div>
-
                     <div className="flex items-start space-x-2">
                       <input
                         type="checkbox"
