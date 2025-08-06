@@ -1,6 +1,5 @@
 "use client";
 
-
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
@@ -44,16 +43,13 @@ export function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const gsap = useGSAP();
 
-  
   const [mounted, setMounted] = useState(false);
 
-  
   const { data: notificationStats } = api.notification.getStats.useQuery(
     undefined,
     { enabled: !!session }
   );
 
-  
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -81,10 +77,8 @@ export function Header() {
     signOut({ callbackUrl: "/" });
   };
 
-  
   const renderThemeToggle = () => {
     if (!mounted) {
-      
       return <div className="w-11 h-6" />;
     }
 
@@ -115,7 +109,7 @@ export function Header() {
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <Logo />
+            <Logo width={100} height={100} />
 
             <nav className="hidden md:flex items-center space-x-8">
               {NAVIGATION_LINKS.map((link) => (
