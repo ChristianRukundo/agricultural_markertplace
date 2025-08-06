@@ -100,15 +100,14 @@ export default function RegisterPage() {
       {/* Illustration Panel */}
       <div className="auth-illustration-panel hidden lg:flex w-1/2 items-center justify-center p-12 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 relative overflow-hidden">
         <div className="text-center z-10">
-          <Link
-            href="/"
+          <button
             className="flex items-center justify-center space-x-3 mb-8"
           >
             <Logo width={100} height={100} showText={false} />  
             <span className="text-3xl font-bold text-gray-800 dark:text-white">
               AgriConnect
             </span>
-          </Link>
+          </button>
           <p className="text-xl max-w-sm mx-auto text-gray-600 dark:text-gray-300">
             Join a thriving community connecting farmers and sellers across
             Rwanda.

@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
@@ -25,7 +26,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { useGSAP } from "@/components/providers/gsap-provider";
 import { api } from "@/lib/trpc/client";
-import { Logo } from "@/components/common/Logo"; // <-- IMPORT THE NEW LOGO COMPONENT
+import { Logo } from "@/components/common/Logo";
 
 const NAVIGATION_LINKS = [
   { href: "/", label: "Home" },
@@ -43,11 +44,19 @@ export function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const gsap = useGSAP();
 
-  // Get notification count
+  
+  const [mounted, setMounted] = useState(false);
+
+  
   const { data: notificationStats } = api.notification.getStats.useQuery(
     undefined,
     { enabled: !!session }
   );
+
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -72,6 +81,28 @@ export function Header() {
     signOut({ callbackUrl: "/" });
   };
 
+  
+  const renderThemeToggle = () => {
+    if (!mounted) {
+      
+      return <div className="w-11 h-6" />;
+    }
+
+    return (
+      <ToggleSwitch
+        checked={theme === "dark"}
+        onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+        icon={
+          theme === "dark" ? (
+            <Moon className="w-4 h-4" />
+          ) : (
+            <Sun className="w-4 h-4" />
+          )
+        }
+      />
+    );
+  };
+
   return (
     <>
       <header
@@ -84,10 +115,8 @@ export function Header() {
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Logo - UPDATED */}
-            <Logo width={100} height={100} />
+            <Logo />
 
-            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
               {NAVIGATION_LINKS.map((link) => (
                 <Link
@@ -100,26 +129,12 @@ export function Header() {
               ))}
             </nav>
 
-            {/* Right Side Actions */}
             <div className="flex items-center space-x-4">
-              {/* Theme Toggle */}
-              <ToggleSwitch
-                checked={theme === "dark"}
-                onCheckedChange={(checked) =>
-                  setTheme(checked ? "dark" : "light")
-                }
-                icon={
-                  theme === "dark" ? (
-                    <Moon className="w-4 h-4" />
-                  ) : (
-                    <Sun className="w-4 h-4" />
-                  )
-                }
-              />
+              {/* Theme Toggle - UPDATED */}
+              {renderThemeToggle()}
 
               {session ? (
                 <>
-                  {/* Notifications */}
                   <Button variant="ghost" size="sm" className="relative">
                     <Bell className="w-5 h-5" />
                     {notificationStats?.unreadCount &&
@@ -135,14 +150,12 @@ export function Header() {
                       )}
                   </Button>
 
-                  {/* Messages */}
                   <Link href="/messages">
                     <Button variant="ghost" size="sm">
                       <MessageCircle className="w-5 h-5" />
                     </Button>
                   </Link>
 
-                  {/* Cart (for sellers) */}
                   {session.user.role === "SELLER" && (
                     <Link href="/seller/cart">
                       <Button variant="ghost" size="sm">
@@ -151,7 +164,6 @@ export function Header() {
                     </Link>
                   )}
 
-                  {/* User Menu */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -197,7 +209,6 @@ export function Header() {
                 </div>
               )}
 
-              {/* Mobile Menu Button */}
               <Button
                 variant="ghost"
                 size="sm"
@@ -210,7 +221,6 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="md:hidden bg-background/95 backdrop-blur-md border-t">
             <nav className="container mx-auto px-4 py-4 space-y-2">
@@ -229,7 +239,6 @@ export function Header() {
         )}
       </header>
 
-      {/* Spacer to prevent content from hiding behind fixed header */}
       <div className="h-16" />
     </>
   );
