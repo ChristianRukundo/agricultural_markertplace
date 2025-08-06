@@ -5,9 +5,9 @@ TODO FOR THIS PROJECT
 
 on 6 august 2025
 
-1. first find a logo
-2. second modify the homepage to add images
-3. image upload functionality
-4. make sure everything works 
+1. [x]first find a logo for
+2. [ ]second modify the homepage to add images
+3. [ ]image upload functionality
+4. [ ]make sure everything works 
 
 

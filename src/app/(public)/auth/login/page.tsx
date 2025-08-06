@@ -12,6 +12,7 @@ import { Mail, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { useGSAP } from "@/components/providers/gsap-provider";
 import { loginSchema } from "@/validation/auth";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/common/Logo";
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
@@ -79,9 +80,8 @@ export default function LoginPage() {
             href="/"
             className="flex items-center justify-center space-x-3 mb-8"
           >
-            <div className="w-12 h-12 bg-white/90 dark:bg-gray-800/90 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-2xl font-bold gradient-text">A</span>
-            </div>
+            <Logo width={100} height={100} showText={false} />
+
             <span className="text-3xl font-bold text-gray-800 dark:text-white">
               AgriConnect
             </span>

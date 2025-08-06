@@ -22,6 +22,7 @@ import { registerFormSchema } from "@/validation/auth";
 import { api } from "@/lib/trpc/client";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { Logo } from "@/components/common/Logo";
 
 type RegisterFormData = z.infer<typeof registerFormSchema>;
 
@@ -96,6 +97,31 @@ export default function RegisterPage() {
       ref={containerRef}
       className="min-h-screen w-full flex bg-gray-50 dark:bg-gray-900"
     >
+      {/* Illustration Panel */}
+      <div className="auth-illustration-panel hidden lg:flex w-1/2 items-center justify-center p-12 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 relative overflow-hidden">
+        <div className="text-center z-10">
+          <Link
+            href="/"
+            className="flex items-center justify-center space-x-3 mb-8"
+          >
+            <Logo width={100} height={100} showText={false} />  
+            <span className="text-3xl font-bold text-gray-800 dark:text-white">
+              AgriConnect
+            </span>
+          </Link>
+          <p className="text-xl max-w-sm mx-auto text-gray-600 dark:text-gray-300">
+            Join a thriving community connecting farmers and sellers across
+            Rwanda.
+          </p>
+        </div>
+        {/* Decorative Shapes */}
+        <div className="absolute -top-16 -right-16 w-64 h-64 bg-primary/10 rounded-full opacity-50 animate-float" />
+        <div
+          className="absolute -bottom-24 -left-10 w-72 h-72 bg-blue-500/10 rounded-full opacity-50 animate-float"
+          style={{ animationDelay: "3s" }}
+        />
+      </div>
+
       {/* Form Panel */}
       <div className="auth-form-panel w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-md">
@@ -254,33 +280,6 @@ export default function RegisterPage() {
             </button>
           </form>
         </div>
-      </div>
-
-      {/* Illustration Panel */}
-      <div className="auth-illustration-panel hidden lg:flex w-1/2 items-center justify-center p-12 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 relative overflow-hidden">
-        <div className="text-center z-10">
-          <Link
-            href="/"
-            className="flex items-center justify-center space-x-3 mb-8"
-          >
-            <div className="w-12 h-12 bg-white/90 dark:bg-gray-800/90 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-2xl font-bold gradient-text">A</span>
-            </div>
-            <span className="text-3xl font-bold text-gray-800 dark:text-white">
-              AgriConnect
-            </span>
-          </Link>
-          <p className="text-xl max-w-sm mx-auto text-gray-600 dark:text-gray-300">
-            Join a thriving community connecting farmers and sellers across
-            Rwanda.
-          </p>
-        </div>
-        {/* Decorative Shapes */}
-        <div className="absolute -top-16 -right-16 w-64 h-64 bg-primary/10 rounded-full opacity-50 animate-float" />
-        <div
-          className="absolute -bottom-24 -left-10 w-72 h-72 bg-blue-500/10 rounded-full opacity-50 animate-float"
-          style={{ animationDelay: "3s" }}
-        />
       </div>
     </main>
   );
