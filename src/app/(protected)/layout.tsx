@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/Header";
-import { PageTransitionOverlay } from "@/components/animations/page-transition-overlay";
 import { FullScreenLoader } from "@/components/ui/loader";
 
 export default function ProtectedLayout({
@@ -42,7 +41,6 @@ export default function ProtectedLayout({
         <Sidebar />
         <main className="flex-1 ml-64 p-8">{children}</main>
       </div>
-      <PageTransitionOverlay />
     </div>
   );
 }

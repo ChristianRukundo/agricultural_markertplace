@@ -1,4 +1,4 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
 const config: Config = {
   darkMode: ["class"],
@@ -61,6 +61,12 @@ const config: Config = {
         "gradient-primary": "var(--gradient-primary)",
         "gradient-secondary": "var(--gradient-secondary)",
         "gradient-accent": "var(--gradient-accent)",
+        "hero-farming":
+          "url('https://images.unsplash.com/photo-1509100194014-d49809396daa?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+        "hero-parallax-bg":
+          "url('https://images.unsplash.com/photo-1678484133144-6dc5f213076d?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')", // Sky/Background
+        "hero-parallax-mid": "url('/images/hero-mid-layer.png')", // Mid-ground hills (Create a transparent PNG for this)
+        "hero-parallax-fg": "url('/images/hero-fg-layer.png')", // Foreground elements (Create a transparent PNG for this)
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
@@ -92,6 +98,6 @@ const config: Config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+} satisfies Config;
 
-export default config
+export default config;
