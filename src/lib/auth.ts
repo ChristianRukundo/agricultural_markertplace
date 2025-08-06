@@ -1,11 +1,15 @@
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import type { GetServerSidePropsContext } from "next"
-import { getServerSession, type DefaultSession, type NextAuthOptions } from "next-auth"
-import type { Adapter } from "next-auth/adapters"
-import CredentialsProvider from "next-auth/providers/credentials"
-import bcrypt from "bcryptjs"
-import { db } from "@/lib/db"
-import { loginSchema } from "@/validation/auth"
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { GetServerSidePropsContext } from "next";
+import {
+  getServerSession,
+  type DefaultSession,
+  type NextAuthOptions,
+} from "next-auth";
+import type { Adapter } from "next-auth/adapters";
+import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import { db } from "@/lib/db";
+import { loginSchema } from "@/validation/auth";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -16,18 +20,18 @@ import { loginSchema } from "@/validation/auth"
 declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
-      id: string
-      role: "FARMER" | "SELLER" | "ADMIN"
-      phoneNumber?: string
-      isVerified: boolean
-    } & DefaultSession["user"]
+      id: string;
+      role: "FARMER" | "SELLER" | "ADMIN";
+      phoneNumber?: string;
+      isVerified: boolean;
+    } & DefaultSession["user"];
   }
 
   interface User {
-    id: string
-    role: "FARMER" | "SELLER" | "ADMIN"
-    phoneNumber?: string
-    isVerified: boolean
+    id: string;
+    role: "FARMER" | "SELLER" | "ADMIN";
+    phoneNumber?: string;
+    isVerified: boolean;
   }
 }
 
@@ -50,11 +54,11 @@ export const authOptions: NextAuthOptions = {
     }),
     jwt: ({ token, user }) => {
       if (user) {
-        token.role = user.role
-        token.phoneNumber = user.phoneNumber
-        token.isVerified = user.isVerified
+        token.role = user.role;
+        token.phoneNumber = user.phoneNumber;
+        token.isVerified = user.isVerified;
       }
-      return token
+      return token;
     },
   },
   adapter: PrismaAdapter(db) as Adapter,
@@ -67,31 +71,45 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials, req) {
         try {
-          const { email, password } = loginSchema.parse(credentials)
+          const { email, password } = loginSchema.parse(credentials);
 
           const user = await db.user.findUnique({
             where: { email },
-          })
+            include: {
+              profile: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          });
 
           if (!user || !user.passwordHash) {
-            return null
+            return null;
           }
 
-          const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
+          const isPasswordValid = await bcrypt.compare(
+            password,
+            user.passwordHash
+          );
 
           if (!isPasswordValid) {
-            return null
+            return null;
           }
 
           return {
             id: user.id,
             email: user.email,
+            // FIX: Access name safely using optional chaining
+            name: user.profile?.name,
             role: user.role,
             phoneNumber: user.phoneNumber ?? undefined,
             isVerified: user.isVerified,
-          }
-        } catch {
-          return null
+          };
+        } catch (error) {
+          // Catch the error to prevent uncaught exceptions
+          console.error("Authorization error:", error);
+          return null;
         }
       },
     }),
@@ -100,9 +118,9 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   pages: {
-    signIn: "/auth/signin",
+    signIn: "/auth/login",
   },
-}
+};
 
 /**
  * Wrapper for `getServerSession` so that you don't need to import the `authOptions` in every file.
@@ -110,8 +128,8 @@ export const authOptions: NextAuthOptions = {
  * @see https://next-auth.js.org/configuration/nextjs
  */
 export const getServerAuthSession = (ctx: {
-  req: GetServerSidePropsContext["req"]
-  res: GetServerSidePropsContext["res"]
+  req: GetServerSidePropsContext["req"];
+  res: GetServerSidePropsContext["res"];
 }) => {
-  return getServerSession(ctx.req, ctx.res, authOptions)
-}
+  return getServerSession(ctx.req, ctx.res, authOptions);
+};

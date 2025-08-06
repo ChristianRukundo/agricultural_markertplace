@@ -10,64 +10,181 @@ import {
   DollarSign,
   Star,
   Bell,
-  Heart,
-  AlertCircle,
+  MessageCircle,
+  BarChart,
+  PieChart,
+  Activity,
+  PlusCircle,
+  Settings,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { FadeIn } from "@/components/animations/fade-in";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/trpc/client";
-import { cn } from "@/lib/utils";
-import { formatPrice } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
+import {
+  ResponsiveContainer,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  Line,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+  CartesianGrid,
+  PieLabelRenderProps,
+  LineChart,
+} from "recharts";
+import Link from "next/link";
+import { useGSAP } from "@gsap/react";
+import { gsap } from "gsap";
+import { useRef } from "react";
+
+const monthlySalesData = [
+  { name: "Jan", Sales: 2400, Orders: 15 },
+  { name: "Feb", Sales: 1398, Orders: 10 },
+  { name: "Mar", Sales: 9800, Orders: 65 },
+  { name: "Apr", Sales: 3908, Orders: 28 },
+  { name: "May", Sales: 4800, Orders: 35 },
+  { name: "Jun", Sales: 3800, Orders: 30 },
+  { name: "Jul", Sales: 4300, Orders: 32 },
+];
+const userGrowthData = [
+  { name: "Jan", Users: 120 },
+  { name: "Feb", Users: 150 },
+  { name: "Mar", Users: 210 },
+  { name: "Apr", Users: 250 },
+  { name: "May", Users: 310 },
+  { name: "Jun", Users: 350 },
+];
+const productCategoriesData = [
+  { name: "Vegetables", value: 45 },
+  { name: "Fruits", value: 25 },
+  { name: "Grains", value: 15 },
+  { name: "Other", value: 15 },
+];
+const COLORS = ["#10B981", "#3B82F6", "#F59E0B", "#6366F1"];
+
+function AnimatedIcon({ icon: Icon }: { icon: React.ElementType }) {
+  return (
+    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+      <Icon className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors duration-300" />
+    </div>
+  );
+}
 
 function StatCard({
   title,
   value,
   icon: Icon,
-  color,
   change,
   changeType,
 }: {
   title: string;
   value: string | number;
   icon: React.ElementType;
-  color: string;
   change?: string;
   changeType?: "increase" | "decrease";
 }) {
   return (
-    <Card className="glassmorphism hover:scale-105 transition-transform duration-300">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
-        <Icon className={cn("w-5 h-5", color)} />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {change && (
-          <p
-            className={cn(
-              "text-xs text-muted-foreground",
-              changeType === "increase" ? "text-green-600" : "text-red-600"
-            )}
-          >
-            {change}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+    <div className="relative p-px rounded-xl overflow-hidden group">
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <Card className="relative h-full bg-background/80 backdrop-blur-md">
+        <CardHeader className="pb-2">
+          <div className="flex items-start justify-between">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {title}
+            </CardTitle>
+            <AnimatedIcon icon={Icon} />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold">{value}</p>
+          {change && (
+            <p
+              className={cn(
+                "text-xs mt-1",
+                changeType === "increase" ? "text-green-500" : "text-red-500"
+              )}
+            >
+              {change} vs. last month
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
-function StatCardSkeleton() {
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="p-3 bg-background/80 backdrop-blur-md border border-border/50 rounded-lg shadow-lg">
+        <p className="font-bold text-foreground">{label}</p>
+        {payload.map((pld: any, index: number) => (
+          <p key={index} style={{ color: pld.color }}>{`${
+            pld.name
+          }: ${pld.value.toLocaleString()}`}</p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+function QuickActions({ role }: { role: "FARMER" | "SELLER" | "ADMIN" }) {
+  const actions = {
+    FARMER: [
+      {
+        label: "Add New Product",
+        icon: PlusCircle,
+        href: "/farmer/products/new",
+      },
+    ],
+    SELLER: [
+      { label: "Browse Products", icon: ShoppingCart, href: "/products" },
+    ],
+    ADMIN: [{ label: "Manage Users", icon: Users, href: "/admin/users" }],
+  };
   return (
-    <Card className="animate-pulse">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <div className="h-4 bg-muted rounded w-2/3"></div>
-        <div className="h-5 w-5 bg-muted rounded-full"></div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Quick Actions</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-7 bg-muted rounded w-1/2 mt-1"></div>
+      <CardContent className="space-y-3">
+        {actions[role].map((action) => (
+          <Button
+            key={action.href}
+            asChild
+            variant="outline"
+            className="w-full justify-start text-left"
+          >
+            <Link href={action.href}>
+              <action.icon className="w-4 h-4 mr-3" />
+              {action.label}
+            </Link>
+          </Button>
+        ))}{" "}
+        <Button asChild variant="outline" className="w-full justify-start">
+          <Link href="/messages">
+            <MessageCircle className="w-4 h-4 mr-3" />
+            View Messages
+          </Link>
+        </Button>{" "}
+        <Button asChild className="w-full justify-start">
+          <Link href="/profile">
+            <Settings className="w-4 h-4 mr-3" />
+            Account Settings
+          </Link>
+        </Button>
       </CardContent>
     </Card>
   );
@@ -75,254 +192,279 @@ function StatCardSkeleton() {
 
 export default function DashboardPage() {
   const { data: session } = useSession();
+  const userId = session?.user?.id;
+  const dashboardRef = useRef(null);
+
+  useGSAP(
+    () => {
+      gsap.fromTo(
+        ".dashboard-item",
+        { opacity: 0, y: 30, scale: 0.98 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          stagger: 0.1,
+          duration: 0.7,
+          ease: "power3.out",
+        }
+      );
+    },
+    { scope: dashboardRef }
+  );
+
   const { data: profile, isLoading: profileLoading } =
-    api.user.getProfile.useQuery();
+    api.user.getProfile.useQuery(undefined, { enabled: !!userId });
   const {
     data: dashboardStats,
     isLoading: statsLoading,
     error: statsError,
-  } = api.dashboard.getStats.useQuery();
+  } = api.dashboard.getStats.useQuery(undefined, { enabled: !!userId });
 
-  const getWelcomeMessage = () => {
-    if (profileLoading) return "Welcome back!";
-    const name = profile?.name || session?.user.name || "User";
+  const renderFarmerDashboard = () => (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 dashboard-item">
+        <StatCard
+          title="Active Products"
+          value={dashboardStats?.stats.activeProductsCount ?? 0}
+          icon={Package}
+        />
+        <StatCard
+          title="Pending Orders"
+          value={dashboardStats?.stats.pendingOrdersCount ?? 0}
+          icon={ShoppingCart}
+          change="+2"
+          changeType="increase"
+        />
+        <StatCard
+          title="This Month's Sales"
+          value={formatPrice(Number(dashboardStats?.stats.monthlySales ?? 0))}
+          icon={DollarSign}
+        />
+        <StatCard
+          title="Average Rating"
+          value={`${(dashboardStats?.stats.averageRating ?? 0).toFixed(1)}`}
+          icon={Star}
+        />
+      </div>
+      <Card className="dashboard-item">
+        <CardHeader>
+          <CardTitle>Sales & Orders Overview</CardTitle>
+          <CardDescription>
+            Your performance over the last 7 months.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="h-96">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={monthlySalesData}
+              margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+            >
+              <defs>
+                <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border)/0.5)"
+              />
+              <XAxis
+                dataKey="name"
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={12}
+              />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              <Area
+                type="monotone"
+                dataKey="Sales"
+                stroke="#10B981"
+                fillOpacity={1}
+                fill="url(#colorSales)"
+                strokeWidth={2}
+              />
+              <Area
+                type="monotone"
+                dataKey="Orders"
+                stroke="#3B82F6"
+                fill="transparent"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </>
+  );
+
+  const renderAdminDashboard = () => (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 dashboard-item">
+        <StatCard
+          title="Total Users"
+          value={dashboardStats?.stats.totalUsers ?? 0}
+          icon={Users}
+          change={`+${(dashboardStats?.stats.userGrowthRate ?? 0).toFixed(1)}%`}
+          changeType="increase"
+        />
+        <StatCard
+          title="Active Products"
+          value={dashboardStats?.stats.activeProducts ?? 0}
+          icon={Package}
+        />
+        <StatCard
+          title="Monthly Revenue"
+          value={formatPrice(Number(dashboardStats?.stats.monthlyRevenue ?? 0))}
+          icon={DollarSign}
+        />
+        <StatCard title="Pending Reviews" value={0} icon={Star} />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 dashboard-item">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>User Growth</CardTitle>
+          </CardHeader>
+          <CardContent className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={userGrowthData}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--border)/0.5)"
+                />
+                <XAxis
+                  dataKey="name"
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <Tooltip content={<CustomTooltip />} />
+                <Line
+                  type="monotone"
+                  dataKey="Users"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 8 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Category Distribution</CardTitle>
+          </CardHeader>
+          <CardContent className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                {/* FIX: Check if percent is defined before using it */}
+                <Pie
+                  data={productCategoriesData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  paddingAngle={5}
+                  label={({ name, percent }: PieLabelRenderProps) =>
+                    `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`
+                  }
+                >
+                  {productCategoriesData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+
+  const renderDashboardContent = () => {
+    if (statsLoading || profileLoading) {
+      return (
+        <div className="flex items-center justify-center h-96">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      );
+    }
+    if (statsError) {
+      return (
+        <div className="text-red-500 p-4 bg-red-500/10 rounded-lg">
+          Error loading dashboard: {statsError.message}
+        </div>
+      );
+    }
     switch (session?.user.role) {
       case "FARMER":
-        return `Welcome back, ${name}! Ready to manage your farm?`;
+        return renderFarmerDashboard();
       case "SELLER":
-        return `Welcome back, ${name}! Let's find some great products.`;
+        return renderFarmerDashboard();
       case "ADMIN":
-        return `Welcome back, ${name}! Here's your platform overview.`;
+        return renderAdminDashboard();
       default:
-        return `Welcome back, ${name}!`;
+        return <div>Welcome to your dashboard.</div>;
     }
   };
 
-  const renderStats = () => {
-    if (!dashboardStats || !dashboardStats.stats) return null;
-
-    switch (dashboardStats.role) {
-      case "FARMER":
-        return (
-          <>
-            <StatCard
-              title="Active Products"
-              value={dashboardStats.stats.activeProductsCount ?? 0}
-              icon={Package}
-              color="text-blue-600"
-            />
-            <StatCard
-              title="Pending Orders"
-              value={dashboardStats.stats.pendingOrdersCount ?? 0}
-              icon={ShoppingCart}
-              color="text-orange-600"
-            />
-            <StatCard
-              title="This Month's Sales"
-              value={formatPrice(
-                Number(dashboardStats.stats.monthlySales ?? 0)
-              )}
-              icon={DollarSign}
-              color="text-green-600"
-            />
-            <StatCard
-              title="Average Rating"
-              value={`${(dashboardStats.stats.averageRating ?? 0).toFixed(
-                1
-              )} (${dashboardStats.stats.reviewCount ?? 0})`}
-              icon={Star}
-              color="text-yellow-600"
-            />
-          </>
-        );
-      case "SELLER":
-        return (
-          <>
-            <StatCard
-              title="Cart Items"
-              value={dashboardStats.stats.cartItemsCount ?? 0}
-              icon={ShoppingCart}
-              color="text-blue-600"
-            />
-            <StatCard
-              title="Active Orders"
-              value={dashboardStats.stats.activeOrdersCount ?? 0}
-              icon={Package}
-              color="text-orange-600"
-            />
-            <StatCard
-              title="This Month's Spend"
-              value={formatPrice(
-                Number(dashboardStats.stats.monthlySpent ?? 0)
-              )}
-              icon={DollarSign}
-              color="text-green-600"
-            />
-            <StatCard
-              title="Saved Products"
-              value={dashboardStats.stats.savedProductsCount ?? 0}
-              icon={Heart}
-              color="text-red-600"
-            />
-          </>
-        );
-      case "ADMIN":
-        const growthRate = (dashboardStats.stats.userGrowthRate ?? 0).toFixed(
-          1
-        );
-        const isGrowthPositive =
-          (dashboardStats.stats.userGrowthRate ?? 0) >= 0;
-        return (
-          <>
-            <StatCard
-              title="Total Users"
-              value={dashboardStats.stats.totalUsers ?? 0}
-              icon={Users}
-              color="text-blue-600"
-            />
-            <StatCard
-              title="Active Products"
-              value={dashboardStats.stats.activeProducts ?? 0}
-              icon={Package}
-              color="text-orange-600"
-            />
-            <StatCard
-              title="Monthly Revenue"
-              value={formatPrice(
-                Number(dashboardStats.stats.monthlyRevenue ?? 0)
-              )}
-              icon={DollarSign}
-              color="text-green-600"
-            />
-            <StatCard
-              title="User Growth"
-              value={`${growthRate}%`}
-              icon={TrendingUp}
-              color={isGrowthPositive ? "text-green-600" : "text-red-600"}
-              change={"vs last month"}
-              changeType={isGrowthPositive ? "increase" : "decrease"}
-            />
-          </>
-        );
-      default:
-        return null;
-    }
-  };
+  const name = profile?.name || session?.user.name || "User";
 
   return (
-    <div className="space-y-8">
-      <FadeIn>
-        <div className="bg-gradient-primary text-white rounded-2xl p-8">
-          <h1 className="text-3xl font-bold mb-2">{getWelcomeMessage()}</h1>
-          <p className="text-white/90">
-            {session?.user.role === "FARMER" &&
-              "Manage your products, track orders, and grow your business."}
-            {session?.user.role === "SELLER" &&
-              "Discover fresh products and manage your purchases."}
-            {session?.user.role === "ADMIN" &&
-              "Monitor platform performance and manage users."}
+    <div ref={dashboardRef} className="space-y-8">
+      <div className="dashboard-item">
+        <div className="p-8 bg-background/80 backdrop-blur-md border rounded-2xl">
+          <h1 className="text-3xl font-bold">Welcome back, {name}!</h1>
+          <p className="text-muted-foreground">
+            Here is your business at a glance. Ready to get started?
           </p>
         </div>
-      </FadeIn>
-
-      {statsError && (
-        <div className="bg-destructive/10 text-destructive p-4 rounded-lg flex items-center gap-3">
-          <AlertCircle className="h-5 w-5" />
-          <div>
-            <h3 className="font-semibold">
-              Could not load dashboard statistics
-            </h3>
-            <p className="text-sm">{statsError.message}</p>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsLoading ? (
-          <>
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-          </>
-        ) : (
-          renderStats()
-        )}
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="glassmorphism">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Bell className="w-5 h-5 mr-2" />
-              Recent Notifications
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Notification system is active. Check the notifications page for
-              details.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="glassmorphism">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {session?.user.role === "FARMER" && (
-                <>
-                  <a
-                    href="/products/new"
-                    className="block p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="font-medium">Add New Product</div>
-                  </a>
-                  <a
-                    href="/orders"
-                    className="block p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="font-medium">View Orders</div>
-                  </a>
-                </>
-              )}
-              {session?.user.role === "SELLER" && (
-                <>
-                  <a
-                    href="/products"
-                    className="block p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="font-medium">Browse Products</div>
-                  </a>
-                  <a
-                    href="/cart"
-                    className="block p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="font-medium">View Cart</div>
-                  </a>
-                </>
-              )}
-              {session?.user.role === "ADMIN" && (
-                <>
-                  <a
-                    href="/admin/users"
-                    className="block p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="font-medium">Manage Users</div>
-                  </a>
-                  <a
-                    href="/admin/analytics"
-                    className="block p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="font-medium">View Analytics</div>
-                  </a>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+        <div className="xl:col-span-3 space-y-8">
+          {renderDashboardContent()}
+        </div>
+        <div className="xl:col-span-1 space-y-8">
+          <div className="dashboard-item">
+            <QuickActions role={session?.user.role as any} />
+          </div>
+          <Card className="dashboard-item">
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div className="flex items-start space-x-3">
+                <Bell className="w-4 h-4 mt-1 text-primary flex-shrink-0" />
+                <p>
+                  <span className="font-semibold">New order #1235</span> from
+                  Kigali Fresh Market.
+                </p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <Star className="w-4 h-4 mt-1 text-yellow-500 flex-shrink-0" />
+                <p>
+                  You received a{" "}
+                  <span className="font-semibold">5-star review</span> on
+                  "Organic Tomatoes".
+                </p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <MessageCircle className="w-4 h-4 mt-1 text-blue-500 flex-shrink-0" />
+                <p>New message from Heaven Restaurant.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -17,23 +17,13 @@ export const passwordSchema = z
     "Password must contain at least one uppercase letter, one lowercase letter, and one number"
   );
 
-export const cleanPhoneNumber = (val: unknown) => {
-  if (typeof val !== "string") {
-    return val;
-  }
-  const cleaned = val.replace(/[^0-9+]/g, "");
-  return cleaned.startsWith("+") ? cleaned : cleaned.replace("+", "");
-};
-
-export const phoneNumberSchema = z.preprocess(
-  cleanPhoneNumber,
-  z
-    .string()
-    .regex(
-      /^(\+250|0)7[0-9]{8}$/,
-      "Invalid Rwandan phone number format. Use +2507XXXXXXXX or 07XXXXXXXX"
-    )
-);
+export const phoneNumberSchema = z
+  .string()
+  .trim()
+  .regex(
+    /^(\+250|0)(7[0-9]{8})$/,
+    "Invalid Rwandan phone number format. Use +250XXXXXXXXX or 07XXXXXXXX"
+  );
 
 export const priceSchema = z
   .number()

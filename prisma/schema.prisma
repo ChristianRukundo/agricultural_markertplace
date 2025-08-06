@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
   // directUrl = env("DIRECT_URL")
 }
 
@@ -61,7 +61,7 @@ enum NotificationType {
   MESSAGE_RECEIVED
   REVIEW_RECEIVED
   SYSTEM_ANNOUNCEMENT
-  
+
   ORDER_PLACED
   ORDER_CONFIRMED
   ORDER_SHIPPED

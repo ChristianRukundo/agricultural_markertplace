@@ -18,39 +18,36 @@ export const notificationRouter = createTRPCRouter({
     .input(getNotificationsSchema)
     .query(async ({ ctx, input }) => {
       try {
-        // Assert ctx.session.user.id as string
-        const userId = ctx.session.user.id as string;
+        if (!ctx.session?.user?.id) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User session not found.",
+          });
+        }
+        const userId = ctx.session.user.id;
         const { isRead, type, page, limit } = input;
 
         const skip = (page - 1) * limit;
 
-        // Build where clause with proper typing for 'type'
         const where: {
           userId: string;
           isRead?: boolean;
           type?: NotificationType;
-        } = {
-          userId,
-        };
-
+        } = { userId };
         if (isRead !== undefined) where.isRead = isRead;
         if (type) where.type = type;
 
-        const [notifications, total, unreadCount] = await Promise.all([
-          ctx.db.notification.findMany({
-            where,
-            skip,
-            take: limit,
-            orderBy: { createdAt: "desc" },
-          }),
-          ctx.db.notification.count({ where }),
-          ctx.db.notification.count({
-            where: {
-              userId,
-              isRead: false,
-            },
-          }),
-        ]);
+        // FIX: Execute queries sequentially to ensure compatibility with connection poolers.
+        const total = await ctx.db.notification.count({ where });
+        const notifications = await ctx.db.notification.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { createdAt: "desc" },
+        });
+        const unreadCount = await ctx.db.notification.count({
+          where: { userId, isRead: false },
+        });
 
         return {
           notifications,
@@ -63,6 +60,7 @@ export const notificationRouter = createTRPCRouter({
           unreadCount,
         };
       } catch (error) {
+        console.error("Failed to fetch notifications:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch notifications",
@@ -77,26 +75,24 @@ export const notificationRouter = createTRPCRouter({
     .input(markNotificationAsReadSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        // Assert ctx.session.user.id as string
-        const userId = ctx.session.user.id as string;
+        if (!ctx.session?.user?.id) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User session not found.",
+          });
+        }
+        const userId = ctx.session.user.id;
         const { id } = input;
 
-        const notification = await ctx.db.notification.findUnique({
-          where: { id },
+        const notification = await ctx.db.notification.findFirst({
+          where: { id, userId }, // Combine find and ownership check
         });
 
         if (!notification) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Notification not found",
-          });
-        }
-
-        // Verify ownership
-        if (notification.userId !== userId) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "You can only mark your own notifications as read",
+            message:
+              "Notification not found or you do not have permission to access it.",
           });
         }
 
@@ -111,9 +107,8 @@ export const notificationRouter = createTRPCRouter({
           notification: updatedNotification,
         };
       } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
+        if (error instanceof TRPCError) throw error;
+        console.error("Failed to mark notification as read:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to mark notification as read",
@@ -128,20 +123,20 @@ export const notificationRouter = createTRPCRouter({
     .input(markAllNotificationsAsReadSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        // Assert ctx.session.user.id as string
-        const userId = ctx.session.user.id as string;
+        if (!ctx.session?.user?.id) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User session not found.",
+          });
+        }
+        const userId = ctx.session.user.id;
         const { type } = input;
 
-        // Build where clause
         const where: {
           userId: string;
           isRead: boolean;
           type?: NotificationType;
-        } = {
-          userId,
-          isRead: false,
-        };
-
+        } = { userId, isRead: false };
         if (type) where.type = type;
 
         const result = await ctx.db.notification.updateMany({
@@ -155,6 +150,7 @@ export const notificationRouter = createTRPCRouter({
           count: result.count,
         };
       } catch (error) {
+        console.error("Failed to mark all notifications as read:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to mark notifications as read",
@@ -169,41 +165,36 @@ export const notificationRouter = createTRPCRouter({
     .input(markNotificationAsReadSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        // Assert ctx.session.user.id as string
-        const userId = ctx.session.user.id as string;
+        if (!ctx.session?.user?.id) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "User session not found.",
+          });
+        }
+        const userId = ctx.session.user.id;
         const { id } = input;
 
-        const notification = await ctx.db.notification.findUnique({
-          where: { id },
+        const notification = await ctx.db.notification.findFirst({
+          where: { id, userId },
         });
 
         if (!notification) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "Notification not found",
+            message:
+              "Notification not found or you do not have permission to delete it.",
           });
         }
 
-        // Verify ownership
-        if (notification.userId !== userId) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "You can only delete your own notifications",
-          });
-        }
-
-        await ctx.db.notification.delete({
-          where: { id },
-        });
+        await ctx.db.notification.delete({ where: { id } });
 
         return {
           success: true,
           message: "Notification deleted successfully",
         };
       } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
+        if (error instanceof TRPCError) throw error;
+        console.error("Failed to delete notification:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to delete notification",
@@ -216,34 +207,35 @@ export const notificationRouter = createTRPCRouter({
    */
   getStats: protectedProcedure.query(async ({ ctx }) => {
     try {
-      // Assert ctx.session.user.id as string
-      const userId = ctx.session.user.id as string;
+      if (!ctx.session?.user?.id) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User session not found.",
+        });
+      }
+      const userId = ctx.session.user.id;
 
-      const [totalCount, unreadCount, typeStats] = await Promise.all([
-        ctx.db.notification.count({
-          where: { userId },
-        }),
-        ctx.db.notification.count({
-          where: { userId, isRead: false },
-        }),
-        ctx.db.notification.groupBy({
-          by: ["type"],
-          where: { userId },
-          _count: {
-            type: true,
-          },
-        }),
-      ]);
+      const totalCount = await ctx.db.notification.count({ where: { userId } });
+      const unreadCount = await ctx.db.notification.count({
+        where: { userId, isRead: false },
+      });
+      const allNotifications = await ctx.db.notification.findMany({
+        where: { userId },
+        select: { type: true },
+      });
+
+      const typeDistribution = allNotifications.reduce((acc, notification) => {
+        acc[notification.type] = (acc[notification.type] || 0) + 1;
+        return acc;
+      }, {} as Record<NotificationType, number>);
 
       return {
         totalCount,
         unreadCount,
-        typeDistribution: typeStats.reduce((acc, stat) => {
-          acc[stat.type as NotificationType] = stat._count.type;
-          return acc;
-        }, {} as Record<NotificationType, number>),
+        typeDistribution,
       };
     } catch (error) {
+      console.error("Failed to fetch notification stats:", error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to fetch notification statistics",

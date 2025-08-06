@@ -4,6 +4,7 @@ import { z } from "zod"
 export const env = createEnv({
   server: {
     DATABASE_URL: z.string().url(),
+    // DIRECT_URL: z.string().url(),
     NODE_ENV: z.enum(["development", "test", "production"]),
     NEXTAUTH_SECRET: process.env.NODE_ENV === "production" ? z.string().min(1) : z.string().min(1).optional(),
     NEXTAUTH_URL: z.preprocess(
@@ -43,6 +44,7 @@ export const env = createEnv({
     SMTP_USER: process.env.SMTP_USER,
     SMTP_PASS: process.env.SMTP_PASS,
     SMS_GATEWAY_API_KEY: process.env.SMS_GATEWAY_API_KEY,
+    // DIRECT_URL: process.env.DIRECT_URL, 
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 })

@@ -123,14 +123,14 @@ const NAVIGATION_ITEMS: Record<string, NavigationItem[]> = {
       description: "Manage your profile",
     },
     {
-      href: "/seller/cart",
+      href: "/cart",
       label: "Cart",
       icon: ShoppingCart,
       description: "Review your items",
       badge: "5",
     },
     {
-      href: "/seller/orders",
+      href: "/orders",
       label: "My Orders",
       icon: Truck,
       description: "Track your purchases",
