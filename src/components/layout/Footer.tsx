@@ -1,5 +1,13 @@
-import Link from "next/link"
-import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from "lucide-react"
+import Link from "next/link";
+import {
+  Facebook,
+  Twitter,
+  Instagram,
+  Mail,
+  Phone,
+  MapPin,
+} from "lucide-react";
+import { Logo } from "@/components/common/Logo"; 
 
 const CONTACT_INFO = {
   email: "hello@agriconnect.rw",
@@ -10,23 +18,19 @@ const CONTACT_INFO = {
     twitter: "https://twitter.com/agriconnect",
     instagram: "https://instagram.com/agriconnect",
   },
-}
+};
 
 export function Footer() {
   return (
     <footer className="bg-muted/50 border-t">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand */}
+          {/* Brand - UPDATED */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">A</span>
-              </div>
-              <span className="text-xl font-bold gradient-text">AgriConnect</span>
-            </div>
+            <Logo width={100} height={100} />
             <p className="text-muted-foreground">
-              Connecting farmers directly with sellers for a sustainable agricultural future.
+              Connecting farmers directly with sellers for a sustainable
+              agricultural future.
             </p>
           </div>
 
@@ -34,16 +38,28 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="font-semibold text-lg">Quick Links</h3>
             <div className="space-y-2">
-              <Link href="/products" className="block text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="/products"
+                className="block text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Browse Products
               </Link>
-              <Link href="/farmers" className="block text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="/farmers"
+                className="block text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Find Farmers
               </Link>
-              <Link href="/about" className="block text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="/about"
+                className="block text-muted-foreground hover:text-foreground transition-colors"
+              >
                 About Us
               </Link>
-              <Link href="/contact" className="block text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="/contact"
+                className="block text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Contact
               </Link>
             </div>
@@ -65,10 +81,16 @@ export function Footer() {
               >
                 Join as Seller
               </Link>
-              <Link href="/dashboard" className="block text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="/dashboard"
+                className="block text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Dashboard
               </Link>
-              <Link href="/help" className="block text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="/help"
+                className="block text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Help Center
               </Link>
             </div>
@@ -121,5 +143,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }
