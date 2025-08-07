@@ -4,11 +4,11 @@ import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertTriangle, Info } from "lucide-react";
 import { useGSAP } from "@/components/providers/gsap-provider";
 import { loginSchema } from "@/validation/auth";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -32,6 +33,25 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      switch (errorParam) {
+        case "CredentialsSignin":
+          setFormError("Invalid email or password. Please try again.");
+          break;
+        case "AccountNotVerified": 
+          setFormError(
+            "Your account is not verified. Please check your email for the verification link or request a new one."
+          );
+          break;
+        default:
+          setFormError("An unexpected error occurred. Please try again.");
+          break;
+      }
+    } else {
+      setFormError(null);
+    }
+
     const tl = gsap.timeline();
     tl.fromTo(
       ".auth-illustration-panel",
@@ -50,7 +70,7 @@ export default function LoginPage() {
         { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" },
         "-=0.3"
       );
-  }, [gsap]);
+  }, [gsap, searchParams]);
 
   const onSubmit = async (data: LoginFormData) => {
     setFormError(null);
@@ -60,7 +80,17 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      setFormError("Invalid email or password. Please try again.");
+      // Direct interpretation of the error message from NextAuth `signIn`
+      if (result.error === "AccountNotVerified") {
+        setFormError(
+          "Your account is not verified. Please check your email for the verification link or request a new one."
+        );
+      } else if (result.error === "Invalid credentials.") {
+        // Matches message thrown in authorize
+        setFormError("Invalid email or password. Please try again.");
+      } else {
+        setFormError("An unexpected error occurred. Please try again.");
+      }
     } else if (result?.ok) {
       router.push("/dashboard");
     } else {
@@ -120,9 +150,28 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* General Form Error */}
             {formError && (
-              <div className="form-element flex items-center space-x-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-lg">
-                <AlertTriangle className="w-5 h-5" />
+              <div
+                className={cn(
+                  "form-element flex items-center space-x-3 p-3 rounded-lg",
+                  formError.includes("not verified")
+                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300"
+                    : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300"
+                )}
+              >
+                {formError.includes("not verified") ? (
+                  <Info className="w-5 h-5" />
+                ) : (
+                  <AlertTriangle className="w-5 h-5" />
+                )}
                 <p className="text-sm">{formError}</p>
+                {formError.includes("not verified") && (
+                  <Link
+                    href="/auth/resend-verification"
+                    className="text-sm font-medium underline ml-auto"
+                  >
+                    Resend Link
+                  </Link>
+                )}
               </div>
             )}
 
@@ -166,7 +215,10 @@ export default function LoginPage() {
                 >
                   Password
                 </label>
-                <Link href="#" className="text-sm text-primary hover:underline">
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-primary hover:underline"
+                >
                   Forgot password?
                 </Link>
               </div>

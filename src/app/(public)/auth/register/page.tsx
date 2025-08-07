@@ -16,6 +16,7 @@ import {
   EyeOff,
   UserCheck,
   ShoppingBag,
+  Loader2,
 } from "lucide-react";
 import { useGSAP } from "@/components/providers/gsap-provider";
 import { registerFormSchema } from "@/validation/auth";
@@ -44,6 +45,7 @@ export default function RegisterPage() {
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
       role: "SELLER",
+      phoneNumber: "",
     },
   });
 
@@ -51,12 +53,7 @@ export default function RegisterPage() {
 
   const registerMutation = api.auth.register.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Account Created!",
-        description: "Please check your email to verify your account.",
-      });
-
-      router.push("/auth/login");
+      router.push("/auth/email-verification-pending");
     },
     onError: (error) => {
       toast({
@@ -97,23 +94,24 @@ export default function RegisterPage() {
       ref={containerRef}
       className="min-h-screen w-full flex bg-gray-50 dark:bg-gray-900"
     >
-      {/* Illustration Panel */}
+
       <div className="auth-illustration-panel hidden lg:flex w-1/2 items-center justify-center p-12 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 relative overflow-hidden">
         <div className="text-center z-10">
-          <button
+          <Link
+            href="/"
             className="flex items-center justify-center space-x-3 mb-8"
           >
-            <Logo width={100} height={100} showText={false} />  
+            <Logo width={100} height={100} showText={false} />
             <span className="text-3xl font-bold text-gray-800 dark:text-white">
               AgriConnect
             </span>
-          </button>
+          </Link>
           <p className="text-xl max-w-sm mx-auto text-gray-600 dark:text-gray-300">
             Join a thriving community connecting farmers and sellers across
             Rwanda.
           </p>
         </div>
-        {/* Decorative Shapes */}
+  
         <div className="absolute -top-16 -right-16 w-64 h-64 bg-primary/10 rounded-full opacity-50 animate-float" />
         <div
           className="absolute -bottom-24 -left-10 w-72 h-72 bg-blue-500/10 rounded-full opacity-50 animate-float"
@@ -121,7 +119,7 @@ export default function RegisterPage() {
         />
       </div>
 
-      {/* Form Panel */}
+      
       <div className="auth-form-panel w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-md">
           <div className="text-left mb-10">
@@ -140,7 +138,7 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Role Selection */}
+      
             <div className="form-element">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 I am a...
@@ -153,8 +151,10 @@ export default function RegisterPage() {
                     "flex flex-col items-center p-4 rounded-lg border-2 transition-all duration-200",
                     selectedRole === "FARMER"
                       ? "border-primary bg-primary/10"
-                      : "border-gray-200 dark:border-gray-700 hover:border-primary/50"
+                      : "border-gray-200 dark:border-gray-700 hover:border-primary/50",
+                    isSubmitting && "opacity-70 cursor-not-allowed"
                   )}
+                  disabled={isSubmitting}
                 >
                   <UserCheck className="w-6 h-6 mb-1 text-primary" />
                   <span className="text-sm font-medium">Farmer</span>
@@ -166,8 +166,10 @@ export default function RegisterPage() {
                     "flex flex-col items-center p-4 rounded-lg border-2 transition-all duration-200",
                     selectedRole === "SELLER"
                       ? "border-primary bg-primary/10"
-                      : "border-gray-200 dark:border-gray-700 hover:border-primary/50"
+                      : "border-gray-200 dark:border-gray-700 hover:border-primary/50",
+                    isSubmitting && "opacity-70 cursor-not-allowed"
                   )}
+                  disabled={isSubmitting}
                 >
                   <ShoppingBag className="w-6 h-6 mb-1 text-primary" />
                   <span className="text-sm font-medium">Seller</span>
@@ -175,7 +177,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Input fields */}
+      
             {[
               {
                 id: "name",
@@ -183,6 +185,7 @@ export default function RegisterPage() {
                 placeholder: "John Doe",
                 icon: User,
                 label: "Full Name",
+                registerKey: "name",
               },
               {
                 id: "email",
@@ -190,13 +193,15 @@ export default function RegisterPage() {
                 placeholder: "your.email@example.com",
                 icon: Mail,
                 label: "Email Address",
+                registerKey: "email",
               },
               {
                 id: "phoneNumber",
                 type: "tel",
-                placeholder: "+250 788 123 456",
+                placeholder: "+250 788 123 456 (Optional)",
                 icon: Phone,
                 label: "Phone Number",
+                registerKey: "phoneNumber",
               },
               {
                 id: "password",
@@ -206,6 +211,7 @@ export default function RegisterPage() {
                 label: "Password",
                 toggle: () => setShowPassword(!showPassword),
                 show: showPassword,
+                registerKey: "password",
               },
               {
                 id: "confirmPassword",
@@ -215,6 +221,7 @@ export default function RegisterPage() {
                 label: "Confirm Password",
                 toggle: () => setShowConfirmPassword(!showConfirmPassword),
                 show: showConfirmPassword,
+                registerKey: "confirmPassword",
               },
             ].map((field) => (
               <div className="form-element" key={field.id}>
@@ -229,11 +236,12 @@ export default function RegisterPage() {
                   <input
                     id={field.id}
                     type={field.type}
-                    {...register(field.id as keyof RegisterFormData)}
+                    {...register(field.registerKey as keyof RegisterFormData)}
                     placeholder={field.placeholder}
                     className={cn(
                       "w-full pl-12 pr-4 py-3 bg-gray-100 dark:bg-gray-800 border rounded-lg focus:outline-none focus:ring-2 transition-all",
-                      errors[field.id as keyof RegisterFormData]
+
+                      errors[field.registerKey as keyof RegisterFormData]
                         ? "border-red-500 focus:ring-red-500/50"
                         : "border-gray-200 dark:border-gray-700 focus:ring-primary/50 focus:border-primary",
                       field.toggle && "pr-12"
@@ -254,15 +262,19 @@ export default function RegisterPage() {
                     </button>
                   )}
                 </div>
-                {errors[field.id as keyof RegisterFormData] && (
+                {errors[field.registerKey as keyof RegisterFormData] && (
                   <p className="mt-2 text-xs text-red-500">
-                    {errors[field.id as keyof RegisterFormData]?.message}
+              
+                    {
+                      errors[field.registerKey as keyof RegisterFormData]
+                        ?.message
+                    }
                   </p>
                 )}
               </div>
             ))}
 
-            {/* Submit Button */}
+      
             <button
               type="submit"
               disabled={isSubmitting || registerMutation.isPending}
@@ -270,7 +282,7 @@ export default function RegisterPage() {
             >
               {isSubmitting || registerMutation.isPending ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
                   <span>Creating Account...</span>
                 </>
               ) : (

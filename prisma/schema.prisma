@@ -1,14 +1,16 @@
 // This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// learn more about it in the docs: https://pris.lyd/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  // directUrl = env("DIRECT_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+
+  
 }
 
 enum UserRole {
@@ -70,6 +72,18 @@ enum NotificationType {
   PRODUCT_REJECTED
 }
 
+// NEW ENUM: To distinguish between different types of auth tokens (email verification, password reset links)
+enum AuthTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+// NEW ENUM: To distinguish between different types of OTPs (phone verification, 2FA)
+enum OtpType {
+  PHONE_VERIFICATION
+  TWO_FACTOR_AUTH
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -93,6 +107,7 @@ model User {
   sessions       Session[]
   cart           Cart?
   savedProducts  SavedProduct[]
+  otps           Otp[] // NEW: Relation to Otp model
 
   @@index([email])
   @@index([phoneNumber])
@@ -131,11 +146,30 @@ model Session {
 
 model VerificationToken {
   identifier String
-  token      String   @unique
+  token      String        @unique
   expires    DateTime
+  createdAt  DateTime      @default(now()) // NEW: Add createdAt for token age tracking
+  type       AuthTokenType // NEW: Field to distinguish token purpose (email verification, password reset)
 
-  @@unique([identifier, token])
+  // Composite unique constraint to allow multiple tokens per identifier if types differ
+  @@unique([identifier, token, type])
   @@map("verificationtokens")
+}
+
+// NEW MODEL: Otp for phone verification or 2FA codes
+model Otp {
+  id        String   @id @default(cuid())
+  userId    String
+  code      String   @db.VarChar(10) // e.g., 6-digit code
+  type      OtpType
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type]) // Ensures only one active OTP of a specific type per user
+  @@index([expiresAt]) // Index for efficient expiry cleanup
+  @@map("otps")
 }
 
 model Profile {

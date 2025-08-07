@@ -85,7 +85,8 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!user || !user.passwordHash) {
-            return null;
+            // Throw a specific error message that can be caught on the client
+            throw new Error("Invalid credentials.");
           }
 
           const isPasswordValid = await bcrypt.compare(
@@ -94,22 +95,31 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isPasswordValid) {
-            return null;
+            // Throw a specific error message
+            throw new Error("Invalid credentials.");
+          }
+
+          // **NEW: Prevent login if account is not verified**
+          if (!user.isVerified) {
+            // This error message will be propagated to `signIn` result's `error` field
+            throw new Error("AccountNotVerified"); // A custom code for the client to interpret
           }
 
           return {
             id: user.id,
             email: user.email,
-            // FIX: Access name safely using optional chaining
             name: user.profile?.name,
             role: user.role,
             phoneNumber: user.phoneNumber ?? undefined,
             isVerified: user.isVerified,
           };
         } catch (error) {
-          // Catch the error to prevent uncaught exceptions
-          console.error("Authorization error:", error);
-          return null;
+          // Re-throw the error so NextAuth captures its message
+          if (error instanceof Error) {
+            throw error;
+          }
+          // Catch any unexpected errors and provide a generic message
+          throw new Error("An unexpected error occurred during login.");
         }
       },
     }),
@@ -119,6 +129,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/auth/login",
+    error: "/auth/login",
   },
 };
 
