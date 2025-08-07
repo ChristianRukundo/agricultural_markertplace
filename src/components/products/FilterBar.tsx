@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { DatePicker } from "@/components/common/DatePicker";
-import { Select } from "@/components/ui/Select"; 
+import { Select } from "@/components/ui/Select";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "@/lib/trpc/_app";
 
@@ -21,7 +21,7 @@ interface FilterBarProps {
   };
   onFilterChange: (
     filterName: keyof FilterBarProps["filters"],
-    value: any
+    value: string | DateRange | null
   ) => void;
   sortBy: string;
   onSortChange: (value: string) => void;
@@ -29,6 +29,12 @@ interface FilterBarProps {
   activeFiltersCount: number;
   clearAllFilters: () => void;
 }
+
+const SORT_OPTIONS = [
+  { value: "createdAt-desc", label: "Newest" },
+  { value: "unitPrice-asc", label: "Price: Low to High" },
+  { value: "unitPrice-desc", label: "Price: High to Low" },
+];
 
 export function FilterBar({
   filters,
@@ -39,12 +45,6 @@ export function FilterBar({
   activeFiltersCount,
   clearAllFilters,
 }: FilterBarProps) {
-  const SORT_OPTIONS = [
-    { value: "createdAt-desc", label: "Newest" },
-    { value: "unitPrice-asc", label: "Price: Low to High" },
-    { value: "unitPrice-desc", label: "Price: High to Low" },
-  ];
-
   const categoryOptions = useMemo(() => {
     const options =
       categoriesData?.categories.map((c) => ({ value: c.id, label: c.name })) ||
@@ -54,7 +54,7 @@ export function FilterBar({
 
   const sortOptions = useMemo(() => {
     return SORT_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }));
-  }, [SORT_OPTIONS]);
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -73,7 +73,6 @@ export function FilterBar({
             value={filters.dateRange}
             onChange={(value) => onFilterChange("dateRange", value)}
           />
-          {/* NEW SELECT COMPONENT FOR SORTING */}
           <Select
             options={sortOptions}
             value={sortBy}
@@ -87,7 +86,6 @@ export function FilterBar({
             <label className="block text-sm font-medium mb-2 text-muted-foreground">
               Category
             </label>
-            {/* NEW SELECT COMPONENT FOR CATEGORY */}
             <Select
               options={categoryOptions}
               value={filters.categoryId}
@@ -96,7 +94,6 @@ export function FilterBar({
               className="w-full"
             />
           </div>
-          {/* Placeholder for future filters */}
           <div>
             <label className="block text-sm font-medium mb-2 text-muted-foreground">
               Location

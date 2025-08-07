@@ -18,7 +18,7 @@ type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 export default function ResetPasswordPage() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token"); // Get token from URL query parameter
+  const token = searchParams.get("token");
   const containerRef = useRef<HTMLDivElement>(null);
   const gsap = useGSAP();
 
@@ -34,7 +34,7 @@ export default function ResetPasswordPage() {
   } = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      token: token || "", // Pre-fill token if available from URL
+      token: token || "",
     },
   });
 
@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
         description: data.message,
       });
       setResetSuccess(true);
-      setErrorMessage(null); // Clear any previous errors
+      setErrorMessage(null);
     },
     onError: (error) => {
       toast({
@@ -68,7 +68,6 @@ export default function ResetPasswordPage() {
   }, [gsap]);
 
   const onSubmit = (data: ResetPasswordFormData) => {
-    // Ensure token is present before submitting
     if (!token) {
       setErrorMessage(
         "No reset token found. Please use the link from your email."
@@ -78,7 +77,6 @@ export default function ResetPasswordPage() {
     resetPasswordMutation.mutate(data);
   };
 
-  // Display an error if no token is found in the URL
   if (!token) {
     return (
       <main className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-6">
@@ -86,7 +84,7 @@ export default function ResetPasswordPage() {
           <AlertTriangle className="w-16 h-16 mx-auto text-red-500 mb-4" />
           <h2 className="text-2xl font-bold mb-4">Invalid Link</h2>
           <p className="text-muted-foreground mb-6">
-            No password reset token found in the URL. Please ensure you've
+            No password reset token found in the URL. Please ensure you&apos;ve
             clicked the full link from your email.
           </p>
           <Link
@@ -139,10 +137,8 @@ export default function ResetPasswordPage() {
               </div>
             )}
 
-            {/* Hidden input for the token, passed to the server */}
             <input type="hidden" {...register("token")} value={token || ""} />
 
-            {/* New Password Input */}
             <div className="auth-panel-content">
               <label
                 htmlFor="password"
@@ -184,7 +180,6 @@ export default function ResetPasswordPage() {
               )}
             </div>
 
-            {/* Confirm New Password Input */}
             <div className="auth-panel-content">
               <label
                 htmlFor="confirmPassword"

@@ -10,13 +10,13 @@ import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/trpc/client";
 import { cn } from "@/lib/utils";
-import { NotificationType } from "@/validation/notification"; // Import the unified NotificationType
+import { NotificationType } from "@/validation/notification";
+import Link from "next/link";
 
 export default function NotificationsPage() {
   const [filter, setFilter] = useState<"ALL" | "UNREAD" | "READ">("ALL");
   const { toast } = useToast();
 
-  // Fetch notifications
   const { data: notificationsData, refetch } =
     api.notification.getNotifications.useQuery({
       page: 1,
@@ -24,7 +24,6 @@ export default function NotificationsPage() {
       isRead: filter === "ALL" ? undefined : filter === "READ",
     });
 
-  // Mark as read mutation
   const markAsReadMutation = api.notification.markAsRead.useMutation({
     onSuccess: () => {
       refetch();
@@ -35,7 +34,6 @@ export default function NotificationsPage() {
     },
   });
 
-  // Mark all as read mutation
   const markAllAsReadMutation = api.notification.markAllAsRead.useMutation({
     onSuccess: () => {
       refetch();
@@ -46,7 +44,6 @@ export default function NotificationsPage() {
     },
   });
 
-  // Delete notification mutation
   const deleteNotificationMutation = api.notification.delete.useMutation({
     onSuccess: () => {
       refetch();
@@ -57,14 +54,13 @@ export default function NotificationsPage() {
     },
   });
 
-  // Function to get appropriate icon based on notification type
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case "ORDER_CREATED":
-      case "ORDER_PLACED": // Map ORDER_PLACED to ORDER_CREATED icon
+      case "ORDER_PLACED":
         return "🛒";
       case "ORDER_UPDATED":
-      case "ORDER_CONFIRMED": // Map ORDER_CONFIRMED to ORDER_UPDATED icon
+      case "ORDER_CONFIRMED":
         return "✅";
       case "ORDER_SHIPPED":
         return "🚚";
@@ -87,37 +83,8 @@ export default function NotificationsPage() {
     }
   };
 
-  // Function to get appropriate color based on notification type
-  const getNotificationColor = (type: NotificationType) => {
-    switch (type) {
-      case "ORDER_CREATED":
-      case "ORDER_PLACED":
-      case "ORDER_UPDATED":
-      case "ORDER_CONFIRMED":
-        return "text-blue-600";
-      case "ORDER_SHIPPED":
-      case "ORDER_DELIVERED":
-        return "text-green-600";
-      case "PAYMENT_RECEIVED":
-        return "text-emerald-600";
-      case "REVIEW_RECEIVED":
-        return "text-yellow-600";
-      case "MESSAGE_RECEIVED":
-        return "text-purple-600";
-      case "PRODUCT_APPROVED":
-        return "text-green-600";
-      case "PRODUCT_REJECTED":
-        return "text-red-600";
-      case "SYSTEM_ANNOUNCEMENT":
-        return "text-indigo-600";
-      default:
-        return "text-gray-600";
-    }
-  };
-
   return (
     <div className="space-y-8">
-      {/* Header */}
       <FadeIn>
         <div className="flex items-center justify-between">
           <div>
@@ -129,11 +96,10 @@ export default function NotificationsPage() {
               Stay updated with your latest activities
             </p>
           </div>
-
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
-              onClick={() => markAllAsReadMutation.mutate({})} // Pass an empty object
+              onClick={() => markAllAsReadMutation.mutate({})}
               disabled={markAllAsReadMutation.isPending}
             >
               <Check className="w-4 h-4 mr-2" />
@@ -143,7 +109,6 @@ export default function NotificationsPage() {
         </div>
       </FadeIn>
 
-      {/* Filters */}
       <FadeIn delay={0.1}>
         <Card className="glassmorphism">
           <CardContent className="p-4">
@@ -151,12 +116,12 @@ export default function NotificationsPage() {
               <div className="flex items-center space-x-4">
                 <Filter className="w-5 h-5 text-muted-foreground" />
                 <div className="flex space-x-2">
-                  {["ALL", "UNREAD", "READ"].map((filterOption) => (
+                  {(["ALL", "UNREAD", "READ"] as const).map((filterOption) => (
                     <Button
                       key={filterOption}
                       variant={filter === filterOption ? "default" : "ghost"}
                       size="sm"
-                      onClick={() => setFilter(filterOption as typeof filter)}
+                      onClick={() => setFilter(filterOption)}
                     >
                       {filterOption.charAt(0) +
                         filterOption.slice(1).toLowerCase()}
@@ -173,9 +138,7 @@ export default function NotificationsPage() {
         </Card>
       </FadeIn>
 
-      {/* Notifications List */}
       <div className="space-y-4">
-        {/* Safely access notifications array, providing an empty array if undefined */}
         {(notificationsData?.notifications || []).length > 0 ? (
           (notificationsData?.notifications || []).map(
             (notification, index) => (
@@ -188,20 +151,17 @@ export default function NotificationsPage() {
                 >
                   <CardContent className="p-6">
                     <div className="flex items-start space-x-4">
-                      {/* Icon */}
                       <div
                         className={cn(
                           "w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0",
                           !notification.isRead ? "bg-primary/10" : "bg-muted"
                         )}
                       >
-                        {/* Ensure notification.type is cast to NotificationType for type safety */}
                         {getNotificationIcon(
                           notification.type as NotificationType
                         )}
                       </div>
 
-                      {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-2">
                           <h3
@@ -210,7 +170,6 @@ export default function NotificationsPage() {
                               !notification.isRead && "text-primary"
                             )}
                           >
-                            {/* Use notification.content or derive a title from type */}
                             {notification.content ||
                               `New ${notification.type
                                 .replace(/_/g, " ")
@@ -257,8 +216,7 @@ export default function NotificationsPage() {
                         </div>
                         <p className="text-muted-foreground mb-3 leading-relaxed">
                           {notification.content}
-                        </p>{" "}
-                        {/* Use notification.content */}
+                        </p>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">
                             {new Date(
@@ -273,10 +231,9 @@ export default function NotificationsPage() {
                             })}
                           </span>
 
-                          {notification.link && ( // Use notification.link
+                          {notification.link && (
                             <Button variant="outline" size="sm" asChild>
-                              <a href={notification.link}>View Details</a>{" "}
-                              {/* Use notification.link */}
+                              <Link href={notification.link}>View Details</Link>
                             </Button>
                           )}
                         </div>
@@ -308,7 +265,6 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      {/* Pagination */}
       {notificationsData && notificationsData.pagination.pages > 1 && (
         <div className="flex justify-center">
           <div className="flex space-x-2">

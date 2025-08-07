@@ -9,6 +9,7 @@ import { api } from "@/lib/trpc/client";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { FullScreenLoader } from "@/components/ui/loader";
+import Image from "next/image";
 
 export default function OrdersPage() {
   const { data: session } = useSession();
@@ -46,7 +47,9 @@ export default function OrdersPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold">{formatPrice(Number(order.totalAmount))}</p>
+                  <p className="font-bold">
+                    {formatPrice(Number(order.totalAmount))}
+                  </p>
                   <Badge className="mt-1">{order.status}</Badge>
                 </div>
               </CardHeader>
@@ -58,9 +61,12 @@ export default function OrdersPage() {
                         key={item.id}
                         className="w-12 h-12 bg-muted rounded-full overflow-hidden border-2 border-background"
                       >
-                        <img
+                        <Image
                           src={item.product.imageUrls[0] || "/placeholder.svg"}
                           alt={item.product.name}
+                          width={48}
+                          height={48}
+                          className="object-cover"
                         />
                       </div>
                     ))}
@@ -85,7 +91,7 @@ export default function OrdersPage() {
           <Package className="mx-auto w-16 h-16 text-muted-foreground mb-4" />
           <h2 className="text-2xl font-bold">No Orders Yet</h2>
           <p className="text-muted-foreground mb-6">
-            You haven't placed any orders. Let's change that!
+            You haven&apos;t placed any orders. Let&apos;s change that!
           </p>
           <Button asChild>
             <Link href="/products">Start Shopping</Link>

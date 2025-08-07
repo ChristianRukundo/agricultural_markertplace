@@ -15,7 +15,7 @@ export default function OrderSuccessPage() {
 
   useEffect(() => {
     setShowConfetti(true);
-    const timer = setTimeout(() => setShowConfetti(false), 8000); // Stop confetti after 8 seconds
+    const timer = setTimeout(() => setShowConfetti(false), 8000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -38,7 +38,7 @@ export default function OrderSuccessPage() {
             </p>
             <p className="mb-8">
               The farmer(s) have been notified. You can track the status of your
-              order in the "My Orders" section.
+              order in the &quot;My Orders&quot; section.
             </p>
             <div className="flex justify-center gap-4">
               <Button asChild>

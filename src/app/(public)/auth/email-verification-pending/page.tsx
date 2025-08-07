@@ -1,7 +1,6 @@
-// src/app/(public)/auth/email-verification-pending/page.tsx
 "use client";
 
-import { CheckCircle, Mail, AlertTriangle, Loader2 } from "lucide-react";
+import { CheckCircle, Mail, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -11,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { api } from "@/lib/trpc/client";
 import { useToast } from "@/hooks/use-toast";
-import { emailSchema } from "@/lib/utils/validation"; 
+import { emailSchema } from "@/lib/utils/validation";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
 import { useGSAP } from "@/components/providers/gsap-provider";
@@ -30,7 +29,7 @@ export default function EmailVerificationPendingPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     reset,
   } = useForm<ResendFormType>({
     resolver: zodResolver(resendFormSchema),
@@ -83,13 +82,15 @@ export default function EmailVerificationPendingPage() {
           <div className="verification-pending-item p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg flex items-start space-x-3">
             <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <p className="text-sm">
-              **Important:** If you don't see the email, please check your spam
-              or junk folder. It might take a few minutes to arrive.
+              **Important:** If you don&apos;t see the email, please check your
+              spam or junk folder. It might take a few minutes to arrive.
             </p>
           </div>
 
           <div className="verification-pending-item space-y-4">
-            <h3 className="text-xl font-semibold">Didn't receive the email?</h3>
+            <h3 className="text-xl font-semibold">
+              Didn&apos;t receive the email?
+            </h3>
             <form
               ref={formRef}
               onSubmit={handleSubmit(onSubmitResend)}

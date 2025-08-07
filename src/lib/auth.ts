@@ -11,12 +11,6 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/validation/auth";
 
-/**
- * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
- * object and keep type safety.
- *
- * @see https://next-auth.js.org/getting-started/typescript#module-augmentation
- */
 declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
@@ -35,11 +29,6 @@ declare module "next-auth" {
   }
 }
 
-/**
- * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
- *
- * @see https://next-auth.js.org/configuration/options
- */
 export const authOptions: NextAuthOptions = {
   callbacks: {
     session: ({ session, token }) => ({
@@ -69,7 +58,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         try {
           const { email, password } = loginSchema.parse(credentials);
 
@@ -85,7 +74,6 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!user || !user.passwordHash) {
-            // Throw a specific error message that can be caught on the client
             throw new Error("Invalid credentials.");
           }
 
@@ -95,14 +83,11 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isPasswordValid) {
-            // Throw a specific error message
             throw new Error("Invalid credentials.");
           }
 
-          // **NEW: Prevent login if account is not verified**
           if (!user.isVerified) {
-            // This error message will be propagated to `signIn` result's `error` field
-            throw new Error("AccountNotVerified"); // A custom code for the client to interpret
+            throw new Error("AccountNotVerified");
           }
 
           return {
@@ -114,11 +99,9 @@ export const authOptions: NextAuthOptions = {
             isVerified: user.isVerified,
           };
         } catch (error) {
-          // Re-throw the error so NextAuth captures its message
           if (error instanceof Error) {
             throw error;
           }
-          // Catch any unexpected errors and provide a generic message
           throw new Error("An unexpected error occurred during login.");
         }
       },
@@ -133,11 +116,6 @@ export const authOptions: NextAuthOptions = {
   },
 };
 
-/**
- * Wrapper for `getServerSession` so that you don't need to import the `authOptions` in every file.
- *
- * @see https://next-auth.js.org/configuration/nextjs
- */
 export const getServerAuthSession = (ctx: {
   req: GetServerSidePropsContext["req"];
   res: GetServerSidePropsContext["res"];

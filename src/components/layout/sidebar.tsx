@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ComponentType } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,13 +24,13 @@ import {
   HelpCircle,
   Menu,
   X,
+  LucideProps,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/trpc/client";
-import { ComponentType } from "react";
 
 type NavigationChild = {
   href: string;
@@ -41,7 +41,7 @@ type NavigationChild = {
 type NavigationItem = {
   href?: string;
   label: string;
-  icon?: ComponentType<any>;
+  icon?: ComponentType<LucideProps>;
   description?: string;
   children?: NavigationChild[];
   badge?: string;
@@ -87,14 +87,12 @@ const NAVIGATION_ITEMS: Record<string, NavigationItem[]> = {
       label: "Orders",
       icon: Truck,
       description: "Manage customer orders",
-      badge: "3",
     },
     {
       href: "/messages",
       label: "Messages",
       icon: MessageCircle,
       description: "Chat with buyers",
-      badge: "2",
     },
     {
       href: "/notifications",
@@ -127,7 +125,6 @@ const NAVIGATION_ITEMS: Record<string, NavigationItem[]> = {
       label: "Cart",
       icon: ShoppingCart,
       description: "Review your items",
-      badge: "5",
     },
     {
       href: "/orders",
@@ -257,7 +254,6 @@ export function Sidebar() {
 
   if (!session) return null;
 
-  // FIX 1: Provide an empty array as a fallback to satisfy the NavigationItem[] type.
   const navigationItems: NavigationItem[] =
     NAVIGATION_ITEMS[session.user.role as keyof typeof NAVIGATION_ITEMS] ?? [];
 
@@ -272,26 +268,17 @@ export function Sidebar() {
   const filteredItems = navigationItems.filter(
     (item) =>
       item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.children &&
-        item.children.some((child) =>
-          child.label.toLowerCase().includes(searchTerm.toLowerCase())
-        ))
+      item.children?.some((child) =>
+        child.label.toLowerCase().includes(searchTerm.toLowerCase())
+      )
   );
 
   const getBadgeCount = (href: string) => {
-    switch (href) {
-      case "/notifications":
-        return notificationStats?.unreadCount || 0;
-      // You can add other cases here for dynamic badges
-      case "/messages":
-        return 2; // Mock data
-      case "/farmer/orders":
-        return 3; // Mock data
-      case "/seller/cart":
-        return 5; // Mock data
-      default:
-        return 0;
+    if (href === "/notifications") {
+      return notificationStats?.unreadCount || 0;
     }
+    // Add other cases for dynamic badges
+    return 0;
   };
 
   return (
@@ -402,7 +389,7 @@ export function Sidebar() {
                 )}
 
                 {filteredItems.map((item) => {
-                  const Icon = item.icon; // FIX 2: Alias component to a capitalized variable
+                  const Icon = item.icon;
                   const isExpanded = expandedItems.includes(item.label);
 
                   if (item.children) {
@@ -417,7 +404,6 @@ export function Sidebar() {
                           )}
                         >
                           <div className="flex items-center space-x-3">
-                            {/* FIX 3: Conditionally render the icon */}
                             {Icon && <Icon className="w-5 h-5 flex-shrink-0" />}
                             {!isCollapsed && <span>{item.label}</span>}
                           </div>
@@ -481,7 +467,6 @@ export function Sidebar() {
                       title={isCollapsed ? item.label : undefined}
                     >
                       <div className="flex items-center space-x-3">
-                        {/* FIX 4: Conditionally render the icon */}
                         {Icon && <Icon className="w-5 h-5 flex-shrink-0" />}
                         {!isCollapsed && (
                           <div className="flex-1">

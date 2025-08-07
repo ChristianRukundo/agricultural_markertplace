@@ -3,7 +3,6 @@
 import type React from "react";
 import { useSession } from "next-auth/react";
 import {
-  TrendingUp,
   Package,
   ShoppingCart,
   Users,
@@ -11,9 +10,7 @@ import {
   Star,
   Bell,
   MessageCircle,
-  BarChart,
   PieChart,
-  Activity,
   PlusCircle,
   Settings,
 } from "lucide-react";
@@ -29,7 +26,6 @@ import { api } from "@/lib/trpc/client";
 import { cn, formatPrice } from "@/lib/utils";
 import {
   ResponsiveContainer,
-  Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -43,10 +39,16 @@ import {
   PieLabelRenderProps,
   LineChart,
 } from "recharts";
+import type { TooltipProps } from "recharts";
+import type {
+  ValueType,
+  NameType,
+} from "recharts/types/component/DefaultTooltipContent";
 import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { useRef } from "react";
+import { UserRole } from "@prisma/client";
 
 const monthlySalesData = [
   { name: "Jan", Sales: 2400, Orders: 15 },
@@ -72,6 +74,22 @@ const productCategoriesData = [
   { name: "Other", value: 15 },
 ];
 const COLORS = ["#10B981", "#3B82F6", "#F59E0B", "#6366F1"];
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="p-3 bg-background/80 backdrop-blur-md border border-border/50 rounded-lg shadow-lg">
+        <p className="font-bold text-foreground">{label}</p>
+        {payload.map((pld: any, index: number) => (
+          <p key={index} style={{ color: pld.color }}>{`${
+            pld.name
+          }: ${pld.value.toLocaleString()}`}</p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 function AnimatedIcon({ icon: Icon }: { icon: React.ElementType }) {
   return (
@@ -124,23 +142,7 @@ function StatCard({
   );
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="p-3 bg-background/80 backdrop-blur-md border border-border/50 rounded-lg shadow-lg">
-        <p className="font-bold text-foreground">{label}</p>
-        {payload.map((pld: any, index: number) => (
-          <p key={index} style={{ color: pld.color }}>{`${
-            pld.name
-          }: ${pld.value.toLocaleString()}`}</p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
-
-function QuickActions({ role }: { role: "FARMER" | "SELLER" | "ADMIN" }) {
+function QuickActions({ role }: { role: UserRole }) {
   const actions = {
     FARMER: [
       {
@@ -172,13 +174,13 @@ function QuickActions({ role }: { role: "FARMER" | "SELLER" | "ADMIN" }) {
               {action.label}
             </Link>
           </Button>
-        ))}{" "}
+        ))}
         <Button asChild variant="outline" className="w-full justify-start">
           <Link href="/messages">
             <MessageCircle className="w-4 h-4 mr-3" />
             View Messages
           </Link>
-        </Button>{" "}
+        </Button>
         <Button asChild className="w-full justify-start">
           <Link href="/profile">
             <Settings className="w-4 h-4 mr-3" />
@@ -226,24 +228,28 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 dashboard-item">
         <StatCard
           title="Active Products"
-          value={dashboardStats?.stats.activeProductsCount ?? 0}
+          value={(dashboardStats?.stats as any)?.activeProductsCount ?? 0}
           icon={Package}
         />
         <StatCard
           title="Pending Orders"
-          value={dashboardStats?.stats.pendingOrdersCount ?? 0}
+          value={(dashboardStats?.stats as any)?.pendingOrdersCount ?? 0}
           icon={ShoppingCart}
           change="+2"
           changeType="increase"
         />
         <StatCard
           title="This Month's Sales"
-          value={formatPrice(Number(dashboardStats?.stats.monthlySales ?? 0))}
+          value={formatPrice(
+            Number((dashboardStats?.stats as any)?.monthlySales ?? 0)
+          )}
           icon={DollarSign}
         />
         <StatCard
           title="Average Rating"
-          value={`${(dashboardStats?.stats.averageRating ?? 0).toFixed(1)}`}
+          value={`${Number(
+            (dashboardStats?.stats as any)?.averageRating ?? 0
+          ).toFixed(1)}`}
           icon={Star}
         />
       </div>
@@ -305,19 +311,23 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 dashboard-item">
         <StatCard
           title="Total Users"
-          value={dashboardStats?.stats.totalUsers ?? 0}
+          value={(dashboardStats?.stats as any)?.totalUsers ?? 0}
           icon={Users}
-          change={`+${(dashboardStats?.stats.userGrowthRate ?? 0).toFixed(1)}%`}
+          change={`+${Number(
+            (dashboardStats?.stats as any)?.userGrowthRate ?? 0
+          ).toFixed(1)}%`}
           changeType="increase"
         />
         <StatCard
           title="Active Products"
-          value={dashboardStats?.stats.activeProducts ?? 0}
+          value={(dashboardStats?.stats as any)?.activeProducts ?? 0}
           icon={Package}
         />
         <StatCard
           title="Monthly Revenue"
-          value={formatPrice(Number(dashboardStats?.stats.monthlyRevenue ?? 0))}
+          value={formatPrice(
+            Number((dashboardStats?.stats as any)?.monthlyRevenue ?? 0)
+          )}
           icon={DollarSign}
         />
         <StatCard title="Pending Reviews" value={0} icon={Star} />
@@ -360,7 +370,6 @@ export default function DashboardPage() {
           <CardContent className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                {/* FIX: Check if percent is defined before using it */}
                 <Pie
                   data={productCategoriesData}
                   dataKey="value"
@@ -375,7 +384,7 @@ export default function DashboardPage() {
                     `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`
                   }
                 >
-                  {productCategoriesData.map((entry, index) => (
+                  {productCategoriesData.map((_entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
@@ -436,7 +445,7 @@ export default function DashboardPage() {
         </div>
         <div className="xl:col-span-1 space-y-8">
           <div className="dashboard-item">
-            <QuickActions role={session?.user.role as any} />
+            <QuickActions role={session?.user.role as UserRole} />
           </div>
           <Card className="dashboard-item">
             <CardHeader>
@@ -455,7 +464,7 @@ export default function DashboardPage() {
                 <p>
                   You received a{" "}
                   <span className="font-semibold">5-star review</span> on
-                  "Organic Tomatoes".
+                  &quot;Organic Tomatoes&quot;.
                 </p>
               </div>
               <div className="flex items-start space-x-3">

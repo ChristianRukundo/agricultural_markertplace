@@ -36,7 +36,7 @@ export default function ResendVerificationPage() {
         title: "Verification Link Sent",
         description: data.message,
       });
-      reset(); // Clear form on success
+      reset();
     },
     onError: (error) => {
       toast({
@@ -71,8 +71,8 @@ export default function ResendVerificationPage() {
             Resend Verification Link
           </h1>
           <p className="auth-panel-content text-gray-500 dark:text-gray-400">
-            If your account is not verified, enter your email and we'll send a
-            new verification link.
+            If your account is not verified, enter your email and we&apos;ll
+            send a new verification link.
           </p>
         </div>
 

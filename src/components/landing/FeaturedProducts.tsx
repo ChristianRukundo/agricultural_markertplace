@@ -2,6 +2,7 @@
 
 import React, { useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
@@ -20,7 +21,7 @@ gsap.registerPlugin(ScrollTrigger);
 type RouterOutput = inferRouterOutputs<AppRouter>;
 type Product = RouterOutput["product"]["getProducts"]["products"][number];
 
-interface FeaturedProductCardProps {  
+interface FeaturedProductCardProps {
   product: Product;
 }
 
@@ -52,15 +53,19 @@ function FeaturedProductCard({ product }: FeaturedProductCardProps) {
         <div className="aspect-[4/3] overflow-hidden relative">
           <div
             ref={imageRef}
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-110"
+            className="absolute inset-0 transition-transform duration-500 ease-out group-hover:scale-110"
             style={{
-              backgroundImage: `url(${
-                product.imageUrls[0] || "/placeholder.svg"
-              })`,
               top: "-7.5%",
               bottom: "-7.5%",
             }}
-          />
+          >
+            <Image
+              src={product.imageUrls[0] || "/placeholder.svg"}
+              alt={product.name}
+              fill
+              className="object-cover"
+            />
+          </div>
           <div className="absolute top-4 left-4">
             <Badge variant="secondary">{product.category.name}</Badge>
           </div>
@@ -68,14 +73,15 @@ function FeaturedProductCard({ product }: FeaturedProductCardProps) {
         <div className="p-6 flex-grow flex flex-col">
           <h3 className="text-xl font-bold mb-2 flex-grow">{product.name}</h3>
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-4">
-            <div className="w-6 h-6 rounded-full bg-muted overflow-hidden">
-              <img
+            <div className="w-6 h-6 rounded-full bg-muted overflow-hidden relative">
+              <Image
                 src={
                   product.farmer.profile?.profilePictureUrl ||
-                  "/placeholder.svg?height=24&width=24&query=farmer-avatar"
+                  "/placeholder.svg"
                 }
                 alt={product.farmer.profile?.name || "Farmer"}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
             </div>
             <span>{product.farmer.profile?.name || "Verified Farmer"}</span>

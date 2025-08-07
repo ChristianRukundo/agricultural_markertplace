@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-
 
 export default function GlobalError({
   error,
@@ -56,10 +56,10 @@ export default function GlobalError({
               </Button>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild variant="ghost">
-                  <a href="/">Return Home</a>
+                  <Link href="/">Return Home</Link>
                 </Button>
                 <Button asChild variant="ghost">
-                  <a href="/contact">Contact Support</a>
+                  <Link href="/contact">Contact Support</Link>
                 </Button>
               </div>
             </div>

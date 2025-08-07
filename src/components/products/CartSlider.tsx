@@ -2,6 +2,7 @@
 
 import React, { useMemo, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import {
@@ -12,7 +13,6 @@ import {
   Trash2,
   ArrowRight,
   Info,
-  Package,
   Heart,
   Loader2,
   AlertTriangle,
@@ -74,9 +74,10 @@ function CartItemDisplay({
       )}
 
       <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0 relative">
-        <img
+        <Image
           src={item.product.imageUrls[0] || "/placeholder.svg"}
           alt={item.product.name}
+          fill
           className="w-full h-full object-cover"
         />
         {!isAvailable && (
@@ -342,7 +343,7 @@ export function CartSlider() {
           <ShoppingCart className="w-16 h-16 text-muted-foreground/50 mb-4" />
           <h3 className="text-xl font-semibold">Your cart is empty</h3>
           <p className="text-muted-foreground">
-            Looks like you haven't added anything to your cart yet.
+            Looks like you haven&apos;t added anything to your cart yet.
           </p>
           <Button asChild className="mt-6 text-lg px-6 py-3">
             <Link href="/products" onClick={closeCart}>
@@ -357,7 +358,7 @@ export function CartSlider() {
       <>
         <div className="flex-grow overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent">
           <div className="space-y-4 divide-y divide-border">
-            {cartData.items.map((item: CartItemType) => (
+            {cartData.items.map((item) => (
               <CartItemDisplay
                 key={item.id}
                 item={item}
@@ -406,11 +407,13 @@ export function CartSlider() {
                         onClick={closeCart}
                         className="flex items-center space-x-3 hover:bg-accent/50 p-2 rounded-md transition-colors group"
                       >
-                        <img
+                        <Image
                           src={
                             savedItem.product.imageUrls[0] || "/placeholder.svg"
                           }
                           alt={savedItem.product.name}
+                          width={40}
+                          height={40}
                           className="w-10 h-10 object-cover rounded-md flex-shrink-0"
                         />
                         <div className="flex-1">
@@ -461,7 +464,7 @@ export function CartSlider() {
               <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <p>
                 Delivery fees are estimates and will be finalized at checkout
-                based on your address and farmer's location.
+                based on your address and farmer&apos;s location.
               </p>
             </div>
           </div>
@@ -492,7 +495,6 @@ export function CartSlider() {
 
   return (
     <>
-      {/* Overlay */}
       <div
         className={cn(
           "fixed inset-0 bg-black/50 transition-opacity duration-300",
@@ -502,7 +504,6 @@ export function CartSlider() {
         )}
         onClick={closeCart}
       />
-      {/* Slider Panel */}
       <div
         ref={sliderRef}
         className={cn(

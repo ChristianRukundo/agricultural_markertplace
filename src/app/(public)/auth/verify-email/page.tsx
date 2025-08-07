@@ -1,15 +1,14 @@
-"use client"
+"use client";
 
-import { useEffect, Suspense } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { CheckCircle, AlertTriangle } from "lucide-react"
-import { api } from "@/lib/trpc/client"
+import { useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { CheckCircle, AlertTriangle } from "lucide-react";
+import { api } from "@/lib/trpc/client";
 
 function VerifyEmailComponent() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const token = searchParams.get("token")
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
 
   const {
     mutate: verifyEmail,
@@ -17,32 +16,37 @@ function VerifyEmailComponent() {
     isError,
     error,
     isPending,
-  } = api.auth.verifyEmail.useMutation()
+  } = api.auth.verifyEmail.useMutation();
 
   useEffect(() => {
     if (token) {
-      verifyEmail({ token })
+      verifyEmail({ token });
     }
-  }, [token, verifyEmail])
+  }, [token, verifyEmail]);
 
   if (!token) {
     return (
       <div className="text-center text-red-500">
         <AlertTriangle className="w-12 h-12 mx-auto mb-4" />
         <h2 className="text-2xl font-bold">Invalid Link</h2>
-        <p>No verification token was provided. Please check the link in your email.</p>
+        <p>
+          No verification token was provided. Please check the link in your
+          email.
+        </p>
       </div>
-    )
+    );
   }
 
   if (isPending) {
     return (
-       <div className="text-center">
+      <div className="text-center">
         <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-primary mx-auto"></div>
         <h2 className="text-2xl font-semibold mt-4">Verifying...</h2>
-        <p className="text-muted-foreground">Please wait while we confirm your email.</p>
+        <p className="text-muted-foreground">
+          Please wait while we confirm your email.
+        </p>
       </div>
-    )
+    );
   }
 
   if (isError) {
@@ -51,11 +55,14 @@ function VerifyEmailComponent() {
         <AlertTriangle className="w-12 h-12 mx-auto mb-4" />
         <h2 className="text-2xl font-bold">Verification Failed</h2>
         <p>{error?.message || "An unknown error occurred."}</p>
-        <Link href="/auth/register" className="mt-4 inline-block text-primary hover:underline">
+        <Link
+          href="/auth/register"
+          className="mt-4 inline-block text-primary hover:underline"
+        >
           Try signing up again
         </Link>
       </div>
-    )
+    );
   }
 
   if (isSuccess) {
@@ -63,7 +70,10 @@ function VerifyEmailComponent() {
       <div className="text-center text-green-600">
         <CheckCircle className="w-12 h-12 mx-auto mb-4" />
         <h2 className="text-2xl font-bold">Email Verified Successfully!</h2>
-        <p>Your account is now active. You can now log in to access your dashboard.</p>
+        <p>
+          Your account is now active. You can now log in to access your
+          dashboard.
+        </p>
         <Link
           href="/auth/login"
           className="mt-6 inline-block bg-primary text-white font-semibold py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors"
@@ -71,10 +81,10 @@ function VerifyEmailComponent() {
           Go to Login
         </Link>
       </div>
-    )
+    );
   }
 
-  return null
+  return null;
 }
 
 export default function VerifyEmailPage() {
@@ -86,5 +96,5 @@ export default function VerifyEmailPage() {
         </Suspense>
       </div>
     </div>
-  )
+  );
 }

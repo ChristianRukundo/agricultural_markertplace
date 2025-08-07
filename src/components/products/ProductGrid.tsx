@@ -39,7 +39,8 @@ export function ProductGrid({ productsData, isLoading }: ProductGridProps) {
         <Search className="mx-auto w-16 h-16 text-muted-foreground/30 mb-4" />
         <h3 className="text-2xl font-bold">No Products Found</h3>
         <p className="text-muted-foreground mt-2">
-          Try adjusting your search or filters to find what you're looking for.
+          Try adjusting your search or filters to find what you&apos;re looking
+          for.
         </p>
       </div>
     );

@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Star, Filter, MessageSquare, Package, User } from "lucide-react";
+import { Star, Filter, Package, User } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -11,7 +11,17 @@ import { StarRating } from "@/components/ui/star-rating";
 import { FadeIn } from "@/components/animations/fade-in";
 import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
 import { api } from "@/lib/trpc/client";
-import { ReviewEntityType } from "@prisma/client"; 
+import { ReviewEntityType } from "@prisma/client";
+import type { inferRouterOutputs } from "@trpc/server";
+import type { AppRouter } from "@/lib/trpc/_app";
+
+type ReviewReceived = NonNullable<
+  inferRouterOutputs<AppRouter>["review"]["getReviews"]
+>["reviews"][number];
+type ReviewGiven = NonNullable<
+  inferRouterOutputs<AppRouter>["review"]["getMyReviews"]
+>["reviews"][number];
+type CombinedReview = ReviewReceived | ReviewGiven;
 
 type FilterType = "ALL" | ReviewEntityType;
 
@@ -22,7 +32,6 @@ export default function ReviewsPage() {
 
   const userId = session?.user.id;
 
-  // Fetch reviews received by the current user (as a Farmer)
   const { data: receivedReviewsData, isLoading: isLoadingReceived } =
     api.review.getReviews.useQuery(
       {
@@ -39,19 +48,17 @@ export default function ReviewsPage() {
       }
     );
 
-  // Fetch reviews given by the current user
   const { data: givenReviewsData, isLoading: isLoadingGiven } =
     api.review.getMyReviews.useQuery(
       {
         page: 1,
-        limit: 100, // Fetch all for client-side filtering
+        limit: 100,
       },
       {
         enabled: activeTab === "given" && !!userId,
       }
     );
 
-  // Memoize filtering for reviews given by the user
   const filteredGivenReviews = useMemo(() => {
     if (!givenReviewsData) return [];
     if (filter === "ALL") return givenReviewsData.reviews;
@@ -91,26 +98,24 @@ export default function ReviewsPage() {
     }
   };
 
-  const getAvatarInitial = (review: any) => {
-    if (activeTab === "received") {
+  const getAvatarInitial = (review: CombinedReview) => {
+    if (activeTab === "received" && "reviewer" in review) {
       return review.reviewer?.profile?.name?.charAt(0) || "A";
     }
-    // "given" tab
-    if (review.reviewedEntityType === "PRODUCT") {
+    if (activeTab === "given" && "product" in review) {
       return review.product?.name?.charAt(0) || "P";
     }
-    return "F"; // For Farmer
+    return "F";
   };
 
-  const getDisplayName = (review: any) => {
-    if (activeTab === "received") {
+  const getDisplayName = (review: CombinedReview) => {
+    if (activeTab === "received" && "reviewer" in review) {
       return review.reviewer?.profile?.name || "Anonymous User";
     }
-    // "given" tab
-    if (review.reviewedEntityType === "PRODUCT") {
+    if (activeTab === "given" && "product" in review) {
       return `Review for ${review.product?.name || "Product"}`;
     }
-    return "Review for a Farmer"; // Name not available from `getMyReviews`
+    return "Review for a Farmer";
   };
 
   return (
@@ -210,81 +215,77 @@ export default function ReviewsPage() {
         {isLoading ? (
           <p>Loading reviews...</p>
         ) : currentReviews && currentReviews.length > 0 ? (
-          currentReviews.map(
-            (
-              review: any,
-              index // Using 'any' as a temporary bridge for different review types
-            ) => (
-              <SlideInOnScroll key={review.id} delay={index * 0.05}>
-                <Card className="glassmorphism hover:scale-[1.01] transition-transform duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-medium text-xl">
-                          {getAvatarInitial(review)}
+          currentReviews.map((review, index) => (
+            <SlideInOnScroll key={review.id} delay={index * 0.05}>
+              <Card className="glassmorphism hover:scale-[1.01] transition-transform duration-300">
+                <CardContent className="p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white font-medium text-xl">
+                        {getAvatarInitial(review)}
+                      </span>
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="font-semibold mb-1">
+                            {getDisplayName(review)}
+                          </h3>
+                          <div className="flex items-center space-x-2">
+                            <StarRating
+                              rating={review.rating}
+                              readonly
+                              size="sm"
+                            />
+                            <Badge
+                              className={getReviewTypeColor(
+                                review.reviewedEntityType
+                              )}
+                            >
+                              {getReviewTypeIcon(review.reviewedEntityType)}
+                              <span className="ml-1 capitalize">
+                                {review.reviewedEntityType.toLowerCase()}
+                              </span>
+                            </Badge>
+                          </div>
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(review.createdAt).toLocaleDateString()}
                         </span>
                       </div>
+                      <p className="text-muted-foreground mb-4 leading-relaxed">
+                        {review.comment}
+                      </p>
 
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="font-semibold mb-1">
-                              {getDisplayName(review)}
-                            </h3>
-                            <div className="flex items-center space-x-2">
-                              <StarRating
-                                rating={review.rating}
-                                readonly
-                                size="sm"
-                              />
-                              <Badge
-                                className={getReviewTypeColor(
-                                  review.reviewedEntityType
-                                )}
+                      <div className="flex items-center justify-end">
+                        {activeTab === "given" &&
+                          review.reviewedEntityType === "PRODUCT" &&
+                          "product" in review &&
+                          review.product && (
+                            <Button variant="link" size="sm" asChild>
+                              <Link href={`/products/${review.product.id}`}>
+                                View Product
+                              </Link>
+                            </Button>
+                          )}
+                        {activeTab === "given" &&
+                          review.reviewedEntityType === "FARMER" && (
+                            <Button variant="link" size="sm" asChild>
+                              <Link
+                                href={`/farmers/${review.reviewedEntityId}`}
                               >
-                                {getReviewTypeIcon(review.reviewedEntityType)}
-                                <span className="ml-1 capitalize">
-                                  {review.reviewedEntityType.toLowerCase()}
-                                </span>
-                              </Badge>
-                            </div>
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(review.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-muted-foreground mb-4 leading-relaxed">
-                          {review.comment}
-                        </p>
-
-                        <div className="flex items-center justify-end">
-                          {activeTab === "given" &&
-                            review.reviewedEntityType === "PRODUCT" &&
-                            review.product && (
-                              <Button variant="link" size="sm" asChild>
-                                <Link href={`/products/${review.product.id}`}>
-                                  View Product
-                                </Link>
-                              </Button>
-                            )}
-                          {activeTab === "given" &&
-                            review.reviewedEntityType === "FARMER" && (
-                              <Button variant="link" size="sm" asChild>
-                                <Link
-                                  href={`/farmers/${review.reviewedEntityId}`}
-                                >
-                                  View Farmer
-                                </Link>
-                              </Button>
-                            )}
-                        </div>
+                                View Farmer
+                              </Link>
+                            </Button>
+                          )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </SlideInOnScroll>
-            )
-          )
+                  </div>
+                </CardContent>
+              </Card>
+            </SlideInOnScroll>
+          ))
         ) : (
           <SlideInOnScroll>
             <Card className="glassmorphism">

@@ -1,13 +1,14 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Package, Truck, User, MapPin } from "lucide-react";
+import { Truck, User } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { api } from "@/lib/trpc/client";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { FullScreenLoader } from "@/components/ui/loader";
+import Image from "next/image";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -55,11 +56,13 @@ export default function OrderDetailPage() {
               {order.orderItems.map((item) => (
                 <div key={item.id} className="flex items-center space-x-4 py-4">
                   <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                    <img
+                    <Image
                       src={item.product.imageUrls[0] || "/placeholder.svg"}
                       alt={item.product.name}
+                      width={64}
+                      height={64}
                       className="w-full h-full object-cover"
-                    />  
+                    />
                   </div>
                   <div className="flex-grow">
                     <p className="font-semibold">{item.product.name}</p>

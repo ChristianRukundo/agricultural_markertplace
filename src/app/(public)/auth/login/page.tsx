@@ -39,7 +39,7 @@ export default function LoginPage() {
         case "CredentialsSignin":
           setFormError("Invalid email or password. Please try again.");
           break;
-        case "AccountNotVerified": 
+        case "AccountNotVerified":
           setFormError(
             "Your account is not verified. Please check your email for the verification link or request a new one."
           );
@@ -80,13 +80,11 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      // Direct interpretation of the error message from NextAuth `signIn`
       if (result.error === "AccountNotVerified") {
         setFormError(
           "Your account is not verified. Please check your email for the verification link or request a new one."
         );
       } else if (result.error === "Invalid credentials.") {
-        // Matches message thrown in authorize
         setFormError("Invalid email or password. Please try again.");
       } else {
         setFormError("An unexpected error occurred. Please try again.");
@@ -103,7 +101,6 @@ export default function LoginPage() {
       ref={containerRef}
       className="min-h-screen w-full flex bg-gray-50 dark:bg-gray-900"
     >
-      {/* Illustration Panel */}
       <div className="auth-illustration-panel hidden lg:flex w-1/2 items-center justify-center p-12 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 relative overflow-hidden">
         <div className="text-center z-10">
           <Link
@@ -111,7 +108,6 @@ export default function LoginPage() {
             className="flex items-center justify-center space-x-3 mb-8"
           >
             <Logo width={100} height={100} showText={false} />
-
             <span className="text-3xl font-bold text-gray-800 dark:text-white">
               AgriConnect
             </span>
@@ -121,7 +117,6 @@ export default function LoginPage() {
             awaits.
           </p>
         </div>
-        {/* Decorative Shapes */}
         <div className="absolute -top-16 -left-16 w-64 h-64 bg-primary/10 rounded-full opacity-50 animate-float" />
         <div
           className="absolute -bottom-24 -right-10 w-72 h-72 bg-blue-500/10 rounded-full opacity-50 animate-float"
@@ -129,7 +124,6 @@ export default function LoginPage() {
         />
       </div>
 
-      {/* Form Panel */}
       <div className="auth-form-panel w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-md">
           <div className="text-left mb-10">
@@ -137,7 +131,7 @@ export default function LoginPage() {
               Sign In
             </h1>
             <p className="form-element text-gray-500 dark:text-gray-400">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link
                 href="/auth/register"
                 className="font-medium text-primary hover:underline"
@@ -148,7 +142,6 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* General Form Error */}
             {formError && (
               <div
                 className={cn(
@@ -175,7 +168,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Email Input */}
             <div className="form-element">
               <label
                 htmlFor="email"
@@ -206,7 +198,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Password Input */}
             <div className="form-element">
               <div className="flex justify-between items-center mb-2">
                 <label
@@ -256,7 +247,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isSubmitting}

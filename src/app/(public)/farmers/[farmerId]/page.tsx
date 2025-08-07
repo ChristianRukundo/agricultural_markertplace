@@ -5,6 +5,7 @@ import type React from "react";
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import {
   MapPin,
   Phone,
@@ -32,6 +33,7 @@ import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/trpc/client";
 import { cn } from "@/lib/utils";
+import { ProductStatus } from "@prisma/client";
 
 export default function FarmerProfilePage() {
   const params = useParams();
@@ -51,18 +53,23 @@ export default function FarmerProfilePage() {
   const [reviewRating, setReviewRating] = useState(5);
   const [isFollowing, setIsFollowing] = useState(false);
 
-  // Fetch farmer profile
   const { data: farmer, isLoading } = api.user.getFarmerProfile.useQuery({
     id: farmerId,
   });
 
-  // Fetch farmer's products
-  const productQueryInput: any = { farmerId, limit: 12 };
-  if (productFilter === "available") productQueryInput.status = "ACTIVE";
+  const productQueryInput: {
+    farmerId: string;
+    limit: number;
+    status?: ProductStatus;
+  } = { farmerId, limit: 12 };
+
+  if (productFilter === "available") {
+    productQueryInput.status = "ACTIVE";
+  }
+
   const { data: productsData } =
     api.product.getProducts.useQuery(productQueryInput);
 
-  // Fetch farmer reviews
   const { data: reviewsData } = api.review.getReviews.useQuery({
     reviewedEntityId: farmerId,
     reviewedEntityType: "FARMER",
@@ -70,7 +77,6 @@ export default function FarmerProfilePage() {
     limit: 10,
   });
 
-  // Add review mutation
   const addReviewMutation = api.review.create.useMutation({
     onSuccess: () => {
       toast({
@@ -123,7 +129,7 @@ export default function FarmerProfilePage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Farmer Not Found</h1>
           <p className="text-muted-foreground mb-8">
-            The farmer profile you're looking for doesn't exist.
+            The farmer profile you&apos;re looking for doesn&apos;t exist.
           </p>
           <Button asChild>
             <Link href="/farmers">Browse Farmers</Link>
@@ -142,7 +148,6 @@ export default function FarmerProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Breadcrumb */}
       <div className="border-b bg-muted/30">
         <div className="container mx-auto px-4 py-4">
           <nav className="flex items-center space-x-2 text-sm">
@@ -169,22 +174,17 @@ export default function FarmerProfilePage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Farmer Profile Sidebar */}
           <FadeIn>
             <div className="space-y-6">
-              {/* Profile Card */}
               <Card className="glassmorphism">
                 <CardContent className="p-6">
                   <div className="text-center mb-6">
-                    {/* Avatar */}
                     <div className="relative inline-block mb-4">
                       <div className="w-32 h-32 bg-gradient-primary rounded-full flex items-center justify-center">
                         <span className="text-white font-bold text-4xl">
                           {farmer.profile?.name?.charAt(0) || "F"}
                         </span>
                       </div>
-
-                      {/* Verification Badge */}
                       <div className="absolute -bottom-2 -right-2">
                         <Badge className="bg-green-500 text-white">
                           <Award className="w-3 h-3 mr-1" />
@@ -192,20 +192,15 @@ export default function FarmerProfilePage() {
                         </Badge>
                       </div>
                     </div>
-
                     <h1 className="text-2xl font-bold mb-2">
                       {farmer.profile?.name || "Unknown Farmer"}
                     </h1>
-
-                    {/* Rating */}
                     <div className="flex items-center justify-center space-x-2 mb-4">
                       <StarRating rating={farmer.averageRating || 0} readonly />
                       <span className="text-sm text-muted-foreground">
                         ({farmer._count.receivedReviews || 0} reviews)
                       </span>
                     </div>
-
-                    {/* Location */}
                     {location && (
                       <div className="flex items-center justify-center text-muted-foreground mb-4">
                         <MapPin className="w-4 h-4 mr-2" />
@@ -214,8 +209,6 @@ export default function FarmerProfilePage() {
                         </span>
                       </div>
                     )}
-
-                    {/* Member Since */}
                     <div className="flex items-center justify-center text-muted-foreground mb-6">
                       <Calendar className="w-4 h-4 mr-2" />
                       <span>
@@ -229,8 +222,6 @@ export default function FarmerProfilePage() {
                         )}
                       </span>
                     </div>
-
-                    {/* Action Buttons */}
                     <div className="space-y-3">
                       <Button
                         className="w-full bg-gradient-primary text-white"
@@ -244,7 +235,6 @@ export default function FarmerProfilePage() {
                         />
                         {isFollowing ? "Following" : "Follow Farmer"}
                       </Button>
-
                       <div className="grid grid-cols-2 gap-2">
                         <Button variant="outline" size="sm">
                           <MessageCircle className="w-4 h-4 mr-2" />
@@ -260,7 +250,6 @@ export default function FarmerProfilePage() {
                 </CardContent>
               </Card>
 
-              {/* Stats Card */}
               <Card className="glassmorphism">
                 <CardHeader>
                   <CardTitle className="text-lg">Farmer Stats</CardTitle>
@@ -293,7 +282,6 @@ export default function FarmerProfilePage() {
                 </CardContent>
               </Card>
 
-              {/* Specializations */}
               {specializations.length > 0 && (
                 <Card className="glassmorphism">
                   <CardHeader>
@@ -315,7 +303,6 @@ export default function FarmerProfilePage() {
                 </Card>
               )}
 
-              {/* Contact Info */}
               <Card className="glassmorphism">
                 <CardHeader>
                   <CardTitle className="text-lg">Contact Information</CardTitle>
@@ -353,9 +340,7 @@ export default function FarmerProfilePage() {
             </div>
           </FadeIn>
 
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Tabs */}
             <SlideInOnScroll direction="right">
               <Card className="glassmorphism">
                 <CardContent className="p-4">
@@ -393,29 +378,23 @@ export default function FarmerProfilePage() {
               </Card>
             </SlideInOnScroll>
 
-            {/* Tab Content */}
             <SlideInOnScroll direction="right" delay={0.1}>
               {activeTab === "products" && (
                 <div className="space-y-6">
-                  {/* Products Header */}
                   <Card className="glassmorphism">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
                           <Filter className="w-4 h-4 text-muted-foreground" />
                           <div className="flex space-x-2">
-                            {["all", "available"].map((filter) => (
+                            {(["all", "available"] as const).map((filter) => (
                               <Button
                                 key={filter}
                                 variant={
                                   productFilter === filter ? "default" : "ghost"
                                 }
                                 size="sm"
-                                onClick={() =>
-                                  setProductFilter(
-                                    filter as typeof productFilter
-                                  )
-                                }
+                                onClick={() => setProductFilter(filter)}
                               >
                                 {filter.charAt(0).toUpperCase() +
                                   filter.slice(1)}
@@ -450,7 +429,6 @@ export default function FarmerProfilePage() {
                     </CardContent>
                   </Card>
 
-                  {/* Products Grid */}
                   {productsData?.products &&
                   productsData.products.length > 0 ? (
                     <div
@@ -475,7 +453,6 @@ export default function FarmerProfilePage() {
                                   : "flex-row"
                               )}
                             >
-                              {/* Product Image */}
                               <div
                                 className={cn(
                                   "bg-muted rounded-lg overflow-hidden relative",
@@ -484,15 +461,17 @@ export default function FarmerProfilePage() {
                                     : "w-32 h-32 flex-shrink-0"
                                 )}
                               >
-                                <img
+                                <Image
                                   src={
                                     product.imageUrls[0] || "/placeholder.svg"
                                   }
                                   alt={product.name}
+                                  width={productViewMode === "grid" ? 300 : 128}
+                                  height={
+                                    productViewMode === "grid" ? 300 : 128
+                                  }
                                   className="w-full h-full object-cover"
                                 />
-
-                                {/* Badges */}
                                 <div className="absolute top-2 left-2 space-y-1">
                                   {product.status === "ACTIVE" && (
                                     <Badge className="bg-blue-500 text-white text-xs">
@@ -501,8 +480,6 @@ export default function FarmerProfilePage() {
                                   )}
                                 </div>
                               </div>
-
-                              {/* Product Info */}
                               <div className="flex-1 space-y-2">
                                 <div>
                                   <h3 className="font-semibold line-clamp-2">
@@ -553,7 +530,7 @@ export default function FarmerProfilePage() {
                           No Products Found
                         </h3>
                         <p className="text-muted-foreground">
-                          This farmer hasn't listed any products yet.
+                          This farmer hasn&apos;t listed any products yet.
                         </p>
                       </CardContent>
                     </Card>
@@ -563,7 +540,6 @@ export default function FarmerProfilePage() {
 
               {activeTab === "reviews" && (
                 <div className="space-y-6">
-                  {/* Review Summary */}
                   <Card className="glassmorphism">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-6">
@@ -588,8 +564,6 @@ export default function FarmerProfilePage() {
                       </div>
                     </CardContent>
                   </Card>
-
-                  {/* Add Review Form */}
                   <Card className="glassmorphism">
                     <CardHeader>
                       <CardTitle>Write a Review</CardTitle>
@@ -630,8 +604,6 @@ export default function FarmerProfilePage() {
                       </form>
                     </CardContent>
                   </Card>
-
-                  {/* Reviews List */}
                   <div className="space-y-4">
                     {reviewsData?.reviews && reviewsData.reviews.length > 0 ? (
                       reviewsData.reviews.map((review) => (
@@ -690,7 +662,6 @@ export default function FarmerProfilePage() {
               {activeTab === "about" && (
                 <Card className="glassmorphism">
                   <CardContent className="p-6 space-y-6">
-                    {/* Description */}
                     <div>
                       <h3 className="text-lg font-semibold mb-3">
                         About {farmer.profile?.name}
@@ -700,8 +671,6 @@ export default function FarmerProfilePage() {
                           "This farmer hasn't provided a description yet."}
                       </p>
                     </div>
-
-                    {/* Farming Experience */}
                     <div>
                       <h4 className="font-medium mb-3">Farming Experience</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -734,8 +703,6 @@ export default function FarmerProfilePage() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Certifications */}
                     <div>
                       <h4 className="font-medium mb-3">
                         Certifications & Awards
@@ -761,8 +728,6 @@ export default function FarmerProfilePage() {
                         </div>
                       </div>
                     </div>
-
-                    {/* Business Hours */}
                     <div>
                       <h4 className="font-medium mb-3">Business Hours</h4>
                       <div className="space-y-1 text-sm">

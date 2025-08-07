@@ -24,9 +24,21 @@ import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/utils";
 import { FullScreenLoader } from "@/components/ui/loader";
 import Image from "next/image";
+import type { inferRouterOutputs } from "@trpc/server";
+import type { AppRouter } from "@/lib/trpc/_app";
 
-function CartItem({ item, onUpdate, onRemove, isMutating }: any) {
-  // FIX: Convert Prisma Decimal to number for calculation
+type CartItemType = NonNullable<
+  inferRouterOutputs<AppRouter>["cart"]["getCart"]
+>["items"][number];
+
+interface CartItemProps {
+  item: CartItemType;
+  onUpdate: (data: { productId: string; quantity: number }) => void;
+  onRemove: (data: { productId: string }) => void;
+  isMutating: boolean;
+}
+
+function CartItem({ item, onUpdate, onRemove, isMutating }: CartItemProps) {
   const itemTotal = Number(item.product.unitPrice) * item.quantity;
 
   return (
@@ -56,7 +68,10 @@ function CartItem({ item, onUpdate, onRemove, isMutating }: any) {
                 quantity: item.quantity - 1,
               })
             }
-            disabled={item.quantity <= 1 || isMutating}
+            disabled={
+              item.quantity <= (item.product.minimumOrderQuantity || 1) ||
+              isMutating
+            }
           >
             <Minus className="w-4 h-4" />
           </Button>
@@ -145,7 +160,6 @@ export default function CartPage() {
 
   const subtotal = useMemo(() => {
     if (!cartData) return 0;
-    // FIX: Convert Prisma Decimal to number before reducing
     return cartData.items.reduce(
       (acc, item) => acc + Number(item.product.unitPrice) * item.quantity,
       0
@@ -166,7 +180,7 @@ export default function CartPage() {
         <ShoppingCart className="mx-auto w-16 h-16 text-muted-foreground mb-4" />
         <h2 className="text-2xl font-bold">Your Cart is Empty</h2>
         <p className="text-muted-foreground mb-6">
-          Looks like you haven't added anything to your cart yet.
+          Looks like you haven&apos;t added anything to your cart yet.
         </p>
         <Button asChild>
           <Link href="/products">Start Shopping</Link>

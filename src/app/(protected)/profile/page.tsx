@@ -2,16 +2,7 @@
 
 import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useSession } from "next-auth/react";
-import {
-  Camera,
-  Save,
-  Phone,
-  Mail,
-  User,
-  Building,
-  Leaf,
-  Package,
-} from "lucide-react";
+import { Camera, Save, User, Building, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -21,9 +12,8 @@ import { FadeIn } from "@/components/animations/fade-in";
 import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/trpc/client";
-import { FarmCapacity } from "@prisma/client"; // Assuming this is available, or use string literals
+import { FarmCapacity } from "@prisma/client";
 
-// Define a type for the form data for better type safety
 type ProfileFormData = {
   name: string;
   description: string;
@@ -35,12 +25,10 @@ type ProfileFormData = {
     sector: string;
     address?: string;
   } | null;
-  // Farmer specific
-  specializations: string[]; // Maps to 'certifications' on the backend
+  specializations: string[];
   farmName: string;
   farmLocationDetails: string;
   farmCapacity: FarmCapacity;
-  // Seller specific
   businessName: string;
   deliveryOptions: string[];
 };
@@ -50,13 +38,12 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
 
-  // Fetch user profile
   const {
     data: profile,
     refetch,
     isLoading: isProfileLoading,
   } = api.user.getProfile.useQuery(undefined, {
-    enabled: !!session, // Only fetch if session exists
+    enabled: !!session,
   });
 
   const [formData, setFormData] = useState<ProfileFormData>({
@@ -73,7 +60,6 @@ export default function ProfilePage() {
     deliveryOptions: [],
   });
 
-  // Centralized mutation handling
   const handleMutationSuccess = (title: string) => {
     toast({
       title,
@@ -82,28 +68,27 @@ export default function ProfilePage() {
     refetch();
   };
 
-  const handleMutationError = (error: any) => {
+  const handleMutationError = (error: unknown) => {
+    const message =
+      error instanceof Error ? error.message : "An unexpected error occurred.";
     toast({
       title: "Update Failed",
-      description: error.message || "An unexpected error occurred.",
+      description: message,
       variant: "destructive",
     });
   };
 
-  // Define all necessary mutations
   const updateProfileMutation = api.user.updateProfile.useMutation();
   const updateFarmerProfileMutation =
     api.user.updateFarmerProfile.useMutation();
   const updateSellerProfileMutation =
     api.user.updateSellerProfile.useMutation();
 
-  // Combined loading state for all mutations
   const isUpdating =
     updateProfileMutation.isPending ||
     updateFarmerProfileMutation.isPending ||
     updateSellerProfileMutation.isPending;
 
-  // Initialize form data when profile loads
   useEffect(() => {
     if (profile) {
       setFormData({
@@ -112,12 +97,10 @@ export default function ProfilePage() {
         contactPhone: profile.contactPhone || "",
         contactEmail: profile.contactEmail || "",
         location: profile.location ? JSON.parse(profile.location) : null,
-        // Farmer-specific fields (from nested farmerProfile)
         specializations: profile.farmerProfile?.certifications || [],
         farmName: profile.farmerProfile?.farmName || "",
         farmLocationDetails: profile.farmerProfile?.farmLocationDetails || "",
         farmCapacity: profile.farmerProfile?.farmCapacity || "SMALL",
-        // Seller-specific fields (from nested sellerProfile)
         businessName: profile.sellerProfile?.businessName || "",
         deliveryOptions: profile.sellerProfile?.deliveryOptions || [],
       });
@@ -138,18 +121,16 @@ export default function ProfilePage() {
 
     const mutationPromises = [];
 
-    // 1. Update base profile
     mutationPromises.push(
       updateProfileMutation.mutateAsync({
         name: formData.name,
         description: formData.description,
         contactPhone: formData.contactPhone,
         contactEmail: formData.contactEmail,
-        location: formData.location ?? undefined, // Pass object directly, handle null
+        location: formData.location ?? undefined,
       })
     );
 
-    // 2. Conditionally update role-specific profile
     if (session.user.role === "FARMER") {
       mutationPromises.push(
         updateFarmerProfileMutation.mutateAsync({
@@ -303,7 +284,6 @@ export default function ProfilePage() {
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       placeholder="Phone Number"
-                      
                     />
                     <Input
                       name="contactEmail"
@@ -311,7 +291,6 @@ export default function ProfilePage() {
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       placeholder="Contact Email"
-                      
                     />
                   </div>
                   <LocationPicker
@@ -346,7 +325,7 @@ export default function ProfilePage() {
                         value={formData.farmCapacity}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        className="w-full px-3 py-2 border border-input bg-background rounded-md"
+                        className="w-full px-3 py-2 border border-input bg-background rounded-md h-10"
                       >
                         <option value="SMALL">Small Capacity</option>
                         <option value="MEDIUM">Medium Capacity</option>

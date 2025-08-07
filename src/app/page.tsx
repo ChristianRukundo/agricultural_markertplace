@@ -1,11 +1,11 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useRef, useState, SVGProps } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-
+import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -13,35 +13,30 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { FullScreenLoader } from "@/components/ui/loader";
-
 import {
   ArrowRight,
   BarChart,
   Check,
   CheckCircle,
   Clock,
-  Database,
-  KeyRound,
   Leaf,
   Minus,
   Package,
   Plus,
   Quote,
-  Shield,
   Star,
   TrendingUp,
   Users,
 } from "lucide-react";
-
 import { SectionHeader } from "@/components/landing/SectionHeader";
 import { FeaturedProducts } from "@/components/landing/FeaturedProducts";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// ... (All sub-components remain the same but with fixes) ...
 interface BenefitCardProps {
   icon: React.ReactNode;
   title: string;
@@ -68,55 +63,6 @@ function BenefitCard({ icon, title, description, features }: BenefitCardProps) {
     </Card>
   );
 }
-
-// --- StatItem Component ---
-interface StatItemProps {
-  value: string;
-  label: string;
-}
-
-function StatItem({ value, label }: StatItemProps) {
-  const statRef = useRef<HTMLDivElement>(null);
-  const numberRef = useRef<HTMLSpanElement>(null);
-
-  const targetValue = parseFloat(value.replace(/[^0-9.]/g, ""));
-  const suffix = value.replace(/[0-9.]/g, "");
-
-  useGSAP(
-    () => {
-      if (!numberRef.current) return;
-      gsap.from(numberRef.current, {
-        textContent: 0,
-        duration: 2.5,
-        ease: "power3.out",
-        snap: { textContent: 1 },
-        scrollTrigger: {
-          trigger: statRef.current,
-          start: "top 85%",
-        },
-        onUpdate: function () {
-          const target = this.targets()[0] as HTMLElement;
-          target.innerHTML = Math.ceil(
-            parseFloat(target.textContent || "0")
-          ).toLocaleString();
-        },
-      });
-    },
-    { scope: statRef }
-  );
-
-  return (
-    <div ref={statRef} className="text-center">
-      <h3 className="text-5xl md:text-6xl font-bold tracking-tighter text-primary">
-        <span ref={numberRef}>{targetValue.toLocaleString()}</span>
-        {suffix}
-      </h3>
-      <p className="mt-2 text-muted-foreground">{label}</p>
-    </div>
-  );
-}
-
-// --- HowItWorksStep Component ---
 interface HowItWorksStepProps {
   step: number;
   title: string;
@@ -143,8 +89,17 @@ function HowItWorksStep({
   );
 }
 
-// --- DashboardMockup Component ---
-const MetricWidget = ({ title, value, change, icon: Icon }: any) => (
+const MetricWidget = ({
+  title,
+  value,
+  change,
+  icon: Icon,
+}: {
+  title: string;
+  value: string;
+  change: string;
+  icon: React.ElementType;
+}) => (
   <div className="p-4 bg-background/50 rounded-lg border border-border/50">
     <div className="flex items-center justify-between mb-1">
       <p className="text-xs text-muted-foreground">{title}</p>
@@ -162,9 +117,25 @@ const MetricWidget = ({ title, value, change, icon: Icon }: any) => (
   </div>
 );
 
-const RecentOrderItem = ({ name, farmer, status, img }: any) => (
+const RecentOrderItem = ({
+  name,
+  farmer,
+  status,
+  img,
+}: {
+  name: string;
+  farmer: string;
+  status: string;
+  img: string;
+}) => (
   <div className="flex items-center space-x-3 text-xs">
-    <img src={img} alt={name} className="w-8 h-8 rounded-full object-cover" />
+    <Image
+      src={img}
+      alt={name}
+      width={32}
+      height={32}
+      className="w-8 h-8 rounded-full object-cover"
+    />
     <div className="flex-grow">
       <p className="font-semibold">{name}</p>
       <p className="text-muted-foreground">{farmer}</p>
@@ -270,7 +241,6 @@ function DashboardMockup() {
   );
 }
 
-// --- BusinessCard Component ---
 interface BusinessCardProps {
   name: string;
   category: string;
@@ -281,11 +251,12 @@ interface BusinessCardProps {
 function BusinessCard({ name, category, owner, image }: BusinessCardProps) {
   return (
     <div className="group">
-      <div className="aspect-[4/3] rounded-xl overflow-hidden mb-4">
-        <img
+      <div className="aspect-[4/3] rounded-xl overflow-hidden mb-4 relative">
+        <Image
           src={image}
           alt={name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
       </div>
       <p className="text-sm text-primary font-semibold">{category}</p>
@@ -294,8 +265,6 @@ function BusinessCard({ name, category, owner, image }: BusinessCardProps) {
     </div>
   );
 }
-
-// --- Pricing Section Components ---
 interface PricingToggleProps {
   onToggle: (cycle: "monthly" | "yearly") => void;
   billingCycle: "monthly" | "yearly";
@@ -423,7 +392,6 @@ function FeatureComparisonTable() {
   );
 }
 
-// --- PricingTier Component (Enhanced) ---
 interface PricingTierProps {
   plan: string;
   priceMonthly: string;
@@ -434,9 +402,6 @@ interface PricingTierProps {
   isPopular?: boolean;
 }
 
-/**
- * An advanced component for a single pricing tier, with animated price changes.
- */
 function PricingTier({
   plan,
   priceMonthly,
@@ -448,7 +413,6 @@ function PricingTier({
 }: PricingTierProps) {
   const priceRef = useRef<HTMLSpanElement>(null);
 
-  // Animate the price change when the billing cycle toggles
   useGSAP(() => {
     if (!priceRef.current) return;
     const priceText = billingCycle === "monthly" ? priceMonthly : priceYearly;
@@ -468,7 +432,7 @@ function PricingTier({
         duration: 0.3,
         ease: "power2.out",
       });
-  }, [billingCycle]);
+  }, [billingCycle, priceMonthly, priceYearly]);
 
   return (
     <div
@@ -514,34 +478,6 @@ function PricingTier({
   );
 }
 
-// --- SecurityFeatureCard Component ---
-interface SecurityFeatureCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}
-
-function SecurityFeatureCard({
-  icon,
-  title,
-  description,
-}: SecurityFeatureCardProps) {
-  return (
-    <div className="p-6 border border-border/50 rounded-xl bg-background/30 backdrop-blur-md">
-      <div className="flex items-center space-x-4">
-        <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
-          {icon}
-        </div>
-        <div>
-          <h4 className="font-bold text-lg">{title}</h4>
-          <p className="text-sm text-muted-foreground">{description}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// --- TestimonialCard Component ---
 interface TestimonialCardProps {
   quote: string;
   author: { name: string; role: string; image: string };
@@ -563,12 +499,14 @@ function TestimonialCard({
         </Badge>
         <Quote className="w-12 h-12 text-primary/20 mb-4" />
         <p className="text-2xl md:text-3xl font-medium leading-snug mb-8">
-          "{quote}"
+          &quot;{quote}&quot;
         </p>
         <div className="flex items-center space-x-4">
-          <img
+          <Image
             src={author.image}
             alt={author.name}
+            width={64}
+            height={64}
             className="w-16 h-16 rounded-full object-cover"
           />
           <div>
@@ -609,7 +547,6 @@ function TestimonialCard({
   );
 }
 
-// --- FAQItem Component ---
 interface FAQItemProps {
   question: string;
   answer: string;
@@ -644,7 +581,6 @@ function FAQItem({ question, answer }: FAQItemProps) {
   );
 }
 
-// --- Checklist Component ---
 interface ChecklistProps {
   items: string[];
   columns?: 1 | 2;
@@ -667,7 +603,6 @@ function Checklist({ items, columns = 1 }: ChecklistProps) {
   );
 }
 
-// --- Background Pattern Component ---
 function BackgroundPattern() {
   return (
     <div className="absolute inset-0 -z-20 overflow-hidden">
@@ -716,7 +651,6 @@ export default function HomePage() {
 
   useGSAP(
     () => {
-      // Hero Animations
       gsap
         .timeline({ defaults: { ease: "power3.out" } })
         .fromTo(
@@ -754,7 +688,6 @@ export default function HomePage() {
         },
       });
 
-      // Staggered Section Entrances
       const sections = gsap.utils.toArray<HTMLElement>(".animated-section");
       sections.forEach((section) => {
         const elems = section.querySelectorAll(".animate-item");
@@ -772,7 +705,6 @@ export default function HomePage() {
         );
       });
 
-      // How It Works Sticky Scroll
       const howItWorksSection = mainRef.current?.querySelector(
         ".how-it-works-section"
       );
@@ -807,7 +739,6 @@ export default function HomePage() {
         });
       }
 
-      // Dashboard 3D Effect
       const mockupContainer = mainRef.current?.querySelector(
         ".dashboard-mockup-container"
       );
@@ -840,7 +771,6 @@ export default function HomePage() {
       <BackgroundPattern />
       <Header />
 
-      {/* --- HERO SECTION --- */}
       <section className="relative min-h-screen flex items-center justify-center text-white">
         <div className="hero-background absolute inset-0 bg-hero-farming bg-cover bg-center" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
@@ -850,7 +780,7 @@ export default function HomePage() {
               Harvesting the Future
             </span>
             <br />
-            <span className="text-white">Connecting Rwanda's Farms</span>
+            <span className="text-white">Connecting Rwanda&apos;s Farms</span>
           </h1>
           <p className="hero-subtitle text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
             The definitive B2B platform for sourcing quality agricultural
@@ -871,7 +801,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- FEATURED BUSINESSES SECTION --- */}
       <section className="py-20 animated-section">
         <div className="container mx-auto px-4">
           <SectionHeader
@@ -916,7 +845,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- WHY CHOOSE US SECTION --- */}
       <section className="py-20 bg-muted/30 animated-section">
         <div className="container mx-auto px-4">
           <SectionHeader
@@ -970,7 +898,6 @@ export default function HomePage() {
       </section>
       <FeaturedProducts />
 
-      {/* --- HOW IT WORKS (VERTICAL STICKY SCROLL) --- */}
       <section className="py-20 how-it-works-section">
         <div className="container mx-auto px-4">
           <SectionHeader
@@ -1032,7 +959,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- DASHBOARD MOCKUP --- */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <SectionHeader
@@ -1048,8 +974,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* --- PRICING SECTION --- */}
 
       <section className="py-20 animated-section">
         <div className="container mx-auto px-4">
@@ -1130,7 +1054,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- TESTIMONIAL CASE STUDY --- */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <TestimonialCard
@@ -1161,7 +1084,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- FAQ Section --- */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <SectionHeader
@@ -1189,7 +1111,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- FINAL CTA --- */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="relative p-12 bg-muted/50 rounded-2xl overflow-hidden text-center">

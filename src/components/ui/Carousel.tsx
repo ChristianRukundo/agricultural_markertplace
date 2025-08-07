@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -68,19 +69,18 @@ export function Carousel({ images, alt, className }: CarouselProps) {
 
   return (
     <div className={cn("relative group", className)}>
-      {/* Main Image */}
       <div
         ref={carouselRef}
-        className="aspect-video bg-muted rounded-lg overflow-hidden"
+        className="aspect-video bg-muted rounded-lg overflow-hidden relative"
       >
-        <img
+        <Image
           src={images[currentIndex] || "/placeholder.svg"}
           alt={`${alt} ${currentIndex + 1}`}
+          fill
           className="w-full h-full object-cover"
         />
       </div>
 
-      {/* Navigation Arrows */}
       {images.length > 1 && (
         <>
           <Button
@@ -102,7 +102,6 @@ export function Carousel({ images, alt, className }: CarouselProps) {
         </>
       )}
 
-      {/* Dots Indicator */}
       {images.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
           {images.map((_, index) => (

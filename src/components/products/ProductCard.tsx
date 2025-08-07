@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { useCartSlider } from "./CartSliderProvider";
+import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/trpc/client";
 import { SlideInOnScroll } from "../animations/slide-in-on-scroll";
@@ -10,8 +10,14 @@ import { Heart, Loader2, ShoppingCart } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
 import { Card } from "../ui/Card";
 import { useSession } from "next-auth/react";
+import type { inferRouterOutputs } from "@trpc/server";
+import type { AppRouter } from "@/lib/trpc/_app";
+
+type ProductType =
+  inferRouterOutputs<AppRouter>["product"]["getProducts"]["products"][number];
+
 interface ProductCardProps {
-  product: any;
+  product: ProductType;
   viewMode: "grid" | "list";
   delay?: number;
 }
@@ -22,8 +28,6 @@ export function ProductCard({
   delay = 0,
 }: ProductCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLDivElement>(null);
-  const { openCart } = useCartSlider();
   const { toast } = useToast();
   const utils = api.useUtils();
   const { data: session } = useSession();
@@ -62,11 +66,11 @@ export function ProductCard({
     },
   });
 
-  const isProductSaved = api.savedProduct.getAll.useQuery(undefined, {
+  const { data: isProductSaved } = api.savedProduct.getAll.useQuery(undefined, {
     enabled: session?.user?.role === "SELLER",
     select: (data) =>
       data?.some((item) => item.productId === product.id) || false,
-  }).data;
+  });
 
   const productAvailable =
     product.status === "ACTIVE" && Number(product.quantityAvailable) > 0;
@@ -88,10 +92,11 @@ export function ProductCard({
               : "w-48 flex-shrink-0 aspect-[4/3] md:aspect-square"
           )}
         >
-          <img
+          <Image
             src={product.imageUrls[0] || "/placeholder.svg"}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+            fill
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
           <Link
@@ -135,12 +140,13 @@ export function ProductCard({
             {product.description}
           </p>
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-4">
-            <img
+            <Image
               src={
-                product.farmer.profile?.profilePictureUrl ||
-                "/placeholder.svg?w=24&h=24"
+                product.farmer.profile?.profilePictureUrl || "/placeholder.svg"
               }
               alt={product.farmer.profile?.name || "Farmer"}
+              width={24}
+              height={24}
               className="w-6 h-6 rounded-full object-cover"
             />
             <span>{product.farmer.profile?.name || "Verified Farmer"}</span>

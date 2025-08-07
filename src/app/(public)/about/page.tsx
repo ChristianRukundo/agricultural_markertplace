@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import {
   Target,
   Award,
@@ -19,6 +20,8 @@ import { Badge } from "@/components/ui/Badge";
 import { FadeIn } from "@/components/animations/fade-in";
 import { SlideInOnScroll } from "@/components/animations/slide-in-on-scroll";
 import { useGSAP } from "@/components/providers/gsap-provider";
+
+// ... (ABOUT_INFO and FAQ_DATA remain the same) ...
 
 const ABOUT_INFO = {
   mission:
@@ -50,7 +53,7 @@ const ABOUT_INFO = {
       name: "Jean Baptiste Nzeyimana",
       role: "CEO & Founder",
       bio: "Agricultural economist with 15+ years experience in Rwanda's farming sector. Former World Bank consultant specializing in agricultural development.",
-      image: "/placeholder.svg?height=300&width=300",
+      image: "/placeholder.svg",
       social: {
         linkedin: "#",
         twitter: "#",
@@ -61,7 +64,7 @@ const ABOUT_INFO = {
       name: "Marie Claire Uwimana",
       role: "CTO & Co-Founder",
       bio: "Technology leader passionate about using tech to solve agricultural challenges. Former software engineer at major tech companies.",
-      image: "/placeholder.svg?height=300&width=300",
+      image: "/placeholder.svg",
       social: {
         linkedin: "#",
         twitter: "#",
@@ -72,7 +75,7 @@ const ABOUT_INFO = {
       name: "Paul Kagame Mutabazi",
       role: "Head of Operations",
       bio: "Operations expert ensuring smooth connections between farmers and sellers. 10+ years in supply chain management and logistics.",
-      image: "/placeholder.svg?height=300&width=300",
+      image: "/placeholder.svg",
       social: {
         linkedin: "#",
         email: "paul@agriconnect.rw",
@@ -82,7 +85,7 @@ const ABOUT_INFO = {
       name: "Grace Mukamana",
       role: "Head of Farmer Relations",
       bio: "Community organizer with deep roots in Rwanda's farming communities. Ensures farmers get the support they need to succeed.",
-      image: "/placeholder.svg?height=300&width=300",
+      image: "/placeholder.svg",
       social: {
         linkedin: "#",
         email: "grace@agriconnect.rw",
@@ -196,7 +199,6 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Enhanced Hero Section */}
       <section
         ref={heroRef}
         className="bg-gradient-to-br from-green-50 via-blue-50 to-yellow-50 dark:from-green-950 dark:via-blue-950 dark:to-yellow-950 py-20"
@@ -210,8 +212,8 @@ export default function AboutPage() {
             </FadeIn>
             <FadeIn delay={0.2}>
               <p className="about-hero-content text-xl text-muted-foreground mb-8">
-                Transforming Rwanda's agricultural landscape through technology
-                and direct farmer-seller connections
+                Transforming Rwanda&apos;s agricultural landscape through
+                technology and direct farmer-seller connections
               </p>
             </FadeIn>
             <FadeIn delay={0.4}>
@@ -234,7 +236,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Enhanced Mission & Vision */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -267,7 +268,6 @@ export default function AboutPage() {
                 </CardContent>
               </Card>
             </SlideInOnScroll>
-
             <SlideInOnScroll direction="right">
               <Card className="glassmorphism p-8 h-full">
                 <CardHeader className="p-0 mb-6">
@@ -301,7 +301,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Company Timeline */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <SlideInOnScroll>
@@ -310,11 +309,11 @@ export default function AboutPage() {
                 Our <span className="gradient-text">Journey</span>
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                From a simple idea to transforming Rwanda's agricultural sector
+                From a simple idea to transforming Rwanda&apos;s agricultural
+                sector
               </p>
             </div>
           </SlideInOnScroll>
-
           <div className="max-w-4xl mx-auto">
             {ABOUT_INFO.timeline.map((milestone, index) => (
               <SlideInOnScroll key={index} delay={index * 0.2}>
@@ -344,7 +343,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Enhanced Values */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <SlideInOnScroll>
@@ -358,7 +356,6 @@ export default function AboutPage() {
               </p>
             </div>
           </SlideInOnScroll>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {ABOUT_INFO.values.map((value, index) => (
               <SlideInOnScroll key={index} delay={index * 0.2}>
@@ -377,7 +374,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Enhanced Stats */}
       <section className="py-20 bg-gradient-primary text-white">
         <div className="container mx-auto px-4">
           <SlideInOnScroll>
@@ -387,11 +383,10 @@ export default function AboutPage() {
               </h2>
               <p className="text-xl opacity-90 max-w-2xl mx-auto">
                 Numbers that showcase our growing community and the real
-                difference we're making
+                difference we&apos;re making
               </p>
             </div>
           </SlideInOnScroll>
-
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {ABOUT_INFO.stats.map((stat, index) => (
               <SlideInOnScroll key={index} delay={index * 0.1}>
@@ -408,7 +403,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Enhanced Team */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <SlideInOnScroll>
@@ -417,19 +411,21 @@ export default function AboutPage() {
                 Meet Our <span className="gradient-text">Team</span>
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Passionate individuals working to transform Rwanda's agriculture
+                Passionate individuals working to transform Rwanda&apos;s
+                agriculture
               </p>
             </div>
           </SlideInOnScroll>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {ABOUT_INFO.team.map((member, index) => (
               <SlideInOnScroll key={index} delay={index * 0.2}>
                 <Card className="glassmorphism overflow-hidden hover:scale-105 transition-transform duration-300">
                   <div className="aspect-square bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 relative">
-                    <img
-                      src={member.image || "/placeholder.svg"}
+                    <Image
+                      src={member.image}
                       alt={member.name}
+                      width={300}
+                      height={300}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -441,8 +437,6 @@ export default function AboutPage() {
                     <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
                       {member.bio}
                     </p>
-
-                    {/* Social Links */}
                     <div className="flex items-center space-x-3">
                       {member.social.linkedin && (
                         <Button
@@ -497,7 +491,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Certifications */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <SlideInOnScroll>
@@ -511,7 +504,6 @@ export default function AboutPage() {
               </p>
             </div>
           </SlideInOnScroll>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {ABOUT_INFO.certifications.map((cert, index) => (
               <SlideInOnScroll key={index} delay={index * 0.2}>
@@ -531,7 +523,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* FAQ Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <SlideInOnScroll>
@@ -545,7 +536,6 @@ export default function AboutPage() {
               </p>
             </div>
           </SlideInOnScroll>
-
           <div className="max-w-4xl mx-auto space-y-4">
             {FAQ_DATA.map((faq, index) => (
               <SlideInOnScroll key={index} delay={index * 0.1}>
@@ -579,7 +569,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Enhanced CTA */}
       <section className="py-20 bg-gradient-primary text-white">
         <div className="container mx-auto px-4 text-center">
           <SlideInOnScroll>

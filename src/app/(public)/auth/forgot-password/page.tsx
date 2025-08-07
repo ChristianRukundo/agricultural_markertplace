@@ -32,9 +32,9 @@ export default function ForgotPasswordPage() {
     onSuccess: (data) => {
       toast({
         title: "Password Reset Link Sent",
-        description: data.message, // "If an account with this email exists, a password reset link has been sent to it."
+        description: data.message,
       });
-      reset(); // Clear form on success
+      reset();
     },
     onError: (error) => {
       toast({
@@ -69,8 +69,8 @@ export default function ForgotPasswordPage() {
             Forgot Your Password?
           </h1>
           <p className="auth-panel-content text-gray-500 dark:text-gray-400">
-            Enter your email address below and we'll send you a link to reset
-            your password.
+            Enter your email address below and we&apos;ll send you a link to
+            reset your password.
           </p>
         </div>
 

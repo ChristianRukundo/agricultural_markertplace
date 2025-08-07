@@ -186,7 +186,6 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic validation
     if (
       !formData.name.trim() ||
       !formData.email.trim() ||
@@ -236,7 +235,6 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Enhanced Hero Section */}
       <section className="bg-gradient-to-br from-green-50 via-blue-50 to-yellow-50 dark:from-green-950 dark:via-blue-950 dark:to-yellow-950 py-20">
         <div className="container mx-auto px-4">
           <FadeIn>
@@ -245,8 +243,8 @@ export default function ContactPage() {
                 Get In <span className="gradient-text">Touch</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                Have questions? We'd love to hear from you. Send us a message
-                and we'll respond as soon as possible.
+                Have questions? We&apos;d love to hear from you. Send us a
+                message and we&apos;ll respond as soon as possible.
               </p>
               <div className="flex items-center justify-center space-x-8 text-sm">
                 <div className="flex items-center">
@@ -267,7 +265,6 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Contact Methods */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <SlideInOnScroll>
@@ -276,11 +273,10 @@ export default function ContactPage() {
                 Choose Your Preferred Contact Method
               </h2>
               <p className="text-xl text-muted-foreground">
-                We're here to help through multiple channels
+                We&apos;re here to help through multiple channels
               </p>
             </div>
           </SlideInOnScroll>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             {CONTACT_METHODS.map((method, index) => (
               <SlideInOnScroll key={index} delay={index * 0.1}>
@@ -314,11 +310,9 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Contact Form & Info */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Enhanced Contact Form */}
             <SlideInOnScroll direction="left">
               <Card className="glassmorphism">
                 <CardHeader>
@@ -327,8 +321,8 @@ export default function ContactPage() {
                     Send us a Message
                   </CardTitle>
                   <p className="text-muted-foreground">
-                    Fill out the form below and we'll get back to you within 24
-                    hours.
+                    Fill out the form below and we&apos;ll get back to you
+                    within 24 hours.
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -399,7 +393,7 @@ export default function ContactPage() {
                           name="category"
                           value={formData.category}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-input bg-background rounded-md"
+                          className="w-full px-3 py-2 border border-input bg-background rounded-md h-10"
                         >
                           <option value="">Select category</option>
                           <option value="general">General Inquiry</option>
@@ -441,7 +435,7 @@ export default function ContactPage() {
                         name="priority"
                         value={formData.priority}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-input bg-background rounded-md"
+                        className="w-full px-3 py-2 border border-input bg-background rounded-md h-10"
                       >
                         <option value="low">Low - General question</option>
                         <option value="normal">
@@ -505,10 +499,8 @@ export default function ContactPage() {
               </Card>
             </SlideInOnScroll>
 
-            {/* Enhanced Contact Information */}
             <SlideInOnScroll direction="right">
               <div className="space-y-6">
-                {/* Office Information */}
                 <Card className="glassmorphism">
                   <CardContent className="p-6">
                     <div className="flex items-start space-x-4">
@@ -540,7 +532,6 @@ export default function ContactPage() {
                   </CardContent>
                 </Card>
 
-                {/* Business Hours */}
                 <Card className="glassmorphism">
                   <CardContent className="p-6">
                     <div className="flex items-start space-x-4">
@@ -586,7 +577,6 @@ export default function ContactPage() {
                   </CardContent>
                 </Card>
 
-                {/* Quick Links */}
                 <Card className="glassmorphism">
                   <CardContent className="p-6">
                     <h3 className="font-bold text-lg mb-4">Quick Links</h3>
@@ -630,7 +620,6 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Enhanced FAQ Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <SlideInOnScroll>
@@ -645,7 +634,6 @@ export default function ContactPage() {
             </div>
           </SlideInOnScroll>
 
-          {/* FAQ Search and Filter */}
           <SlideInOnScroll delay={0.2}>
             <div className="max-w-4xl mx-auto mb-12">
               <div className="flex flex-col md:flex-row gap-4">
@@ -661,7 +649,7 @@ export default function ContactPage() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-4 py-2 rounded-md border bg-background min-w-[200px]"
+                  className="px-4 py-2 rounded-md border bg-background min-w-[200px] h-10"
                 >
                   <option value="">All Categories</option>
                   {FAQ_DATA.map((category) => (
@@ -674,7 +662,6 @@ export default function ContactPage() {
             </div>
           </SlideInOnScroll>
 
-          {/* FAQ Content */}
           <div className="max-w-4xl mx-auto">
             {filteredFAQs.map((category, categoryIndex) => (
               <SlideInOnScroll

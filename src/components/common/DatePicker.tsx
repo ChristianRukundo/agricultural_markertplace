@@ -1,17 +1,10 @@
 "use client";
 
-import React, {
-  useState,
-  useMemo,
-  useRef,
-  useCallback,
-  useEffect,
-} from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
-  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
@@ -37,7 +30,6 @@ import {
   addDays,
   isAfter,
   isBefore,
-  getDay,
   startOfDay,
   endOfDay,
 } from "date-fns";
@@ -93,25 +85,10 @@ export function DatePicker({
         setPickingEndDate(true);
         setHoveredDate(null);
       } else {
-        const newFrom = isBefore(day, selectedRange.from)
-          ? day
-          : selectedRange.from;
-        const newTo = isAfter(day, selectedRange.from)
-          ? day
-          : selectedRange.from;
-
         const finalRange = {
-          from: newFrom,
-          to: newTo,
+          from: isBefore(day, selectedRange.from) ? day : selectedRange.from,
+          to: isAfter(day, selectedRange.from) ? day : selectedRange.from,
         };
-
-        if (isAfter(day, selectedRange.from)) {
-          finalRange.to = day;
-        } else {
-          finalRange.from = day;
-          finalRange.to = selectedRange.from;
-        }
-
         onChange(finalRange);
         setSelectedRange(finalRange);
         setPickingEndDate(false);
@@ -121,19 +98,6 @@ export function DatePicker({
     },
     [pickingEndDate, selectedRange.from, onChange]
   );
-
-  const getDisplayRange = (day: Date) => {
-    if (!selectedRange.from && !selectedRange.to) return null;
-
-    const start = selectedRange.from || day;
-    const end =
-      pickingEndDate && hoveredDate ? hoveredDate : selectedRange.to || day;
-
-    if (isAfter(start, end)) {
-      return { from: end, to: start };
-    }
-    return { from: start, to: end };
-  };
 
   const handlePresetRange = useCallback(
     (rangeName: string) => {
@@ -179,8 +143,6 @@ export function DatePicker({
             to: endOfMonth(addMonths(today, 1)),
           };
           break;
-        default:
-          break;
       }
       onChange(newRange);
       setSelectedRange(newRange);
@@ -223,7 +185,6 @@ export function DatePicker({
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0 z-[100]" align="start">
         <div className="flex bg-background rounded-md shadow-lg">
-          {/* Left Panel: Quick Select Options */}
           <div className="w-48 border-r py-4 px-2">
             <div className="space-y-1">
               <Button
@@ -316,8 +277,6 @@ export function DatePicker({
               </Button>
             </div>
           </div>
-
-          {/* Right Panel: Calendar View */}
           <div className="p-4">
             <div className="flex items-center justify-between mb-2">
               <Button
@@ -345,11 +304,6 @@ export function DatePicker({
             </div>
             <div className="grid grid-cols-7 gap-1 mt-2">
               {daysInMonth.map((day) => {
-                const dayAsNumber = day.getTime();
-                const fromAsNumber = selectedRange.from?.getTime() || 0;
-                const toAsNumber = selectedRange.to?.getTime() || 0;
-                const hoveredAsNumber = hoveredDate?.getTime() || 0;
-
                 const isStart =
                   selectedRange.from && isSameDay(day, selectedRange.from);
                 const isEnd =

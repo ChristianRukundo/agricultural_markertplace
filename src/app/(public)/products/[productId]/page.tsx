@@ -3,17 +3,13 @@
 import React, { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
-  Heart,
-  Share2,
   ShoppingCart,
   MessageCircle,
   MapPin,
   Calendar,
   Package,
-  Truck,
-  Shield,
-  Award,
   Users,
   ChevronLeft,
   ChevronRight,
@@ -44,7 +40,6 @@ export default function ProductDetailPage() {
   >("description");
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
-  const [isWishlisted, setIsWishlisted] = useState(false);
 
   const {
     data: product,
@@ -54,8 +49,8 @@ export default function ProductDetailPage() {
   } = api.product.getById.useQuery({ id: productId });
 
   const { data: farmerData } = api.user.getFarmerProfile.useQuery(
-    { id: product?.farmerId! },
-    { enabled: !!product?.farmerId }
+    { id: product?.farmer.profile.user.id ?? "" },
+    { enabled: !!product?.farmer.profile.user.id }
   );
 
   const { data: relatedProductsData } = api.product.getProducts.useQuery(
@@ -80,10 +75,10 @@ export default function ProductDetailPage() {
         description: `${quantity}kg of ${product?.name} added to your cart.`,
       });
     },
-    onError: (error) => {
+    onError: (err) => {
       toast({
         title: "Failed to Add to Cart",
-        description: error.message,
+        description: err.message,
         variant: "destructive",
       });
     },
@@ -97,13 +92,12 @@ export default function ProductDetailPage() {
       });
       setReviewText("");
       setReviewRating(5);
-
       refetchProduct();
     },
-    onError: (error) => {
+    onError: (err) => {
       toast({
         title: "Failed to Add Review",
-        description: error.message,
+        description: err.message,
         variant: "destructive",
       });
     },
@@ -142,7 +136,8 @@ export default function ProductDetailPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
           <p className="text-muted-foreground mb-8">
-            The product you're looking for doesn't exist or could not be loaded.
+            The product you&apos;re looking for doesn&apos;t exist or could not
+            be loaded.
           </p>
           <Button onClick={() => router.push("/products")}>
             Browse Products
@@ -185,10 +180,11 @@ export default function ProductDetailPage() {
           <FadeIn>
             <div className="space-y-4">
               <div className="aspect-square rounded-2xl overflow-hidden bg-muted relative group">
-                <img
-                  src={productImages[selectedImageIndex]}
+                <Image
+                  src={productImages[selectedImageIndex]!}
                   alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  fill
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 {productImages.length > 1 && (
                   <>
@@ -234,16 +230,17 @@ export default function ProductDetailPage() {
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
                       className={cn(
-                        "flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors",
+                        "flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors relative",
                         selectedImageIndex === index
                           ? "border-primary"
                           : "border-transparent hover:border-muted-foreground"
                       )}
                     >
-                      <img
+                      <Image
                         src={image}
                         alt={`${product.name} ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                     </button>
                   ))}
@@ -277,7 +274,7 @@ export default function ProductDetailPage() {
               <div className="bg-muted/50 rounded-lg p-4">
                 <div className="flex items-baseline space-x-2">
                   <span className="text-3xl font-bold text-primary">
-                    RWF {product.unitPrice.toLocaleString()}
+                    RWF {Number(product.unitPrice).toLocaleString()}
                   </span>
                   <span className="text-muted-foreground">
                     per {productUnit}
@@ -380,7 +377,7 @@ export default function ProductDetailPage() {
                 </Button>
                 <div className="grid grid-cols-2 gap-3">
                   <Button variant="outline" size="lg" asChild>
-                    <Link href={`/farmers/${product.farmerId}`}>
+                    <Link href={`/farmers/${product.farmer.profile.user.id}`}>
                       <Users className="w-4 h-4 mr-2" />
                       View Farmer
                     </Link>
@@ -551,7 +548,6 @@ export default function ProductDetailPage() {
                             addReviewMutation.isPending || !reviewText.trim()
                           }
                         >
-                          {" "}
                           {addReviewMutation.isPending
                             ? "Submitting..."
                             : "Submit Review"}
@@ -601,7 +597,7 @@ export default function ProductDetailPage() {
                       </div>
                     </div>
                     <Button asChild>
-                      <Link href={`/farmers/${product.farmerId}`}>
+                      <Link href={`/farmers/${product.farmer.profile.user.id}`}>
                         View Full Profile
                       </Link>
                     </Button>
@@ -624,11 +620,12 @@ export default function ProductDetailPage() {
                   >
                     <CardContent className="p-4">
                       <Link href={`/products/${rp.id}`} className="block">
-                        <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden">
-                          <img
+                        <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden relative">
+                          <Image
                             src={rp.imageUrls[0] || "/placeholder.svg"}
                             alt={rp.name}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
                           />
                         </div>
                         <h3 className="font-semibold mb-2 line-clamp-2 h-12">
@@ -637,7 +634,7 @@ export default function ProductDetailPage() {
                       </Link>
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-primary">
-                          RWF {rp.unitPrice.toLocaleString()}
+                          RWF {Number(rp.unitPrice).toLocaleString()}
                         </span>
                         <Button size="sm" asChild>
                           <Link href={`/products/${rp.id}`}>View</Link>
