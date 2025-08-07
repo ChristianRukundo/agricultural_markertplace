@@ -2,14 +2,12 @@
 
 import React, { createContext, useState, useContext, ReactNode } from "react";
 
-// Define the shape of the context data
 interface CartContextType {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
 }
 
-// Create the context with a default value of null
 const CartSliderContext = createContext<CartContextType | null>(null);
 
 /**

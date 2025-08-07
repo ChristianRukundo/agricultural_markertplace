@@ -1,33 +1,32 @@
-"use client";
-
-import React, { useRef } from "react";
-import Link from "next/link";
-import { useGSAP } from "@gsap/react";
-import { gsap } from "gsap";
-import { ShoppingCart, ArrowRight, MapPin } from "lucide-react";
+import { useRef } from "react";
 import { useCartSlider } from "./CartSliderProvider";
-import { api } from "@/lib/trpc/client";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/hooks/use-toast";
-import { formatPrice } from "@/lib/utils";
-import type { inferRouterOutputs } from "@trpc/server";
-import type { AppRouter } from "@/lib/trpc/_app";
-
-type Product =
-  inferRouterOutputs<AppRouter>["product"]["getProducts"]["products"][number];
-
+import { api } from "@/lib/trpc/client";
+import { SlideInOnScroll } from "../animations/slide-in-on-scroll";
+import Link from "next/link";
+import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
+import { Heart, Loader2, ShoppingCart } from "lucide-react";
+import { cn, formatPrice } from "@/lib/utils";
+import { Card } from "../ui/Card";
+import { useSession } from "next-auth/react";
 interface ProductCardProps {
-  product: Product;
+  product: any;
+  viewMode: "grid" | "list";
+  delay?: number;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({
+  product,
+  viewMode,
+  delay = 0,
+}: ProductCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
   const { openCart } = useCartSlider();
   const { toast } = useToast();
   const utils = api.useUtils();
+  const { data: session } = useSession();
 
   const addToCartMutation = api.cart.addItem.useMutation({
     onSuccess: () => {
@@ -36,7 +35,6 @@ export function ProductCard({ product }: ProductCardProps) {
         title: "Added to Cart",
         description: `"${product.name}" has been added.`,
       });
-      openCart();
     },
     onError: (err) => {
       toast({
@@ -47,37 +45,53 @@ export function ProductCard({ product }: ProductCardProps) {
     },
   });
 
-  useGSAP(
-    () => {
-      if (!cardRef.current || !imageRef.current) return;
-      gsap.to(imageRef.current, {
-        y: "-15%",
-        ease: "none",
-        scrollTrigger: {
-          trigger: cardRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
-        },
+  const toggleSavedMutation = api.savedProduct.toggle.useMutation({
+    onSuccess: (data) => {
+      utils.savedProduct.getAll.invalidate();
+      toast({
+        title: "Saved Products",
+        description: data.message,
       });
     },
-    { scope: cardRef }
-  );
+    onError: (err) => {
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const isProductSaved = api.savedProduct.getAll.useQuery(undefined, {
+    enabled: session?.user?.role === "SELLER",
+    select: (data) =>
+      data?.some((item) => item.productId === product.id) || false,
+  }).data;
+
+  const productAvailable =
+    product.status === "ACTIVE" && Number(product.quantityAvailable) > 0;
 
   return (
-    <div ref={cardRef} className="group h-full">
-      <Card className="overflow-hidden relative h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <div className="aspect-[4/3] overflow-hidden relative">
-          <div
-            ref={imageRef}
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-500 ease-out group-hover:scale-110"
-            style={{
-              backgroundImage: `url(${
-                product.imageUrls[0] || "/placeholder.svg"
-              })`,
-              top: "-7.5%",
-              bottom: "-7.5%",
-            }}
+    <SlideInOnScroll key={product.id} direction="up" delay={delay}>
+      <Card
+        ref={cardRef}
+        className={cn(
+          "group overflow-hidden relative h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
+          viewMode === "list" && "flex-row md:flex-row"
+        )}
+      >
+        <div
+          className={cn(
+            "relative",
+            viewMode === "grid"
+              ? "aspect-[4/3] overflow-hidden"
+              : "w-48 flex-shrink-0 aspect-[4/3] md:aspect-square"
+          )}
+        >
+          <img
+            src={product.imageUrls[0] || "/placeholder.svg"}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
           <Link
@@ -88,11 +102,38 @@ export function ProductCard({ product }: ProductCardProps) {
           <div className="absolute top-3 left-3 z-20">
             <Badge variant="secondary">{product.category.name}</Badge>
           </div>
+          {session?.user?.role === "SELLER" && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "absolute top-3 right-3 z-20 rounded-full",
+                isProductSaved
+                  ? "text-red-500 fill-red-500"
+                  : "text-white/70 hover:text-white"
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleSavedMutation.mutate({ productId: product.id });
+              }}
+              disabled={toggleSavedMutation.isPending}
+            >
+              <Heart className="w-5 h-5" />
+            </Button>
+          )}
         </div>
-        <div className="p-4 flex-grow flex flex-col">
+        <div
+          className={cn(
+            "p-4 flex-grow flex flex-col",
+            viewMode === "list" && "flex-1"
+          )}
+        >
           <h3 className="font-bold text-lg mb-2 flex-grow transition-colors group-hover:text-primary">
             {product.name}
           </h3>
+          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+            {product.description}
+          </p>
           <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-4">
             <img
               src={
@@ -111,23 +152,40 @@ export function ProductCard({ product }: ProductCardProps) {
                 {formatPrice(Number(product.unitPrice))}
               </p>
             </div>
-            <Button
-              size="sm"
-              className="relative z-20"
-              onClick={(e) => {
-                e.stopPropagation();
-                addToCartMutation.mutate({
-                  productId: product.id,
-                  quantity: 1,
-                });
-              }}
-              disabled={addToCartMutation.isPending}
-            >
-              <ShoppingCart className="w-4 h-4 mr-2" /> Add
-            </Button>
+            {session?.user?.role === "SELLER" ? (
+              <Button
+                size="sm"
+                className="relative z-20"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  addToCartMutation.mutate({
+                    productId: product.id,
+                    quantity:
+                      product.minimumOrderQuantity > 0
+                        ? product.minimumOrderQuantity
+                        : 1,
+                  });
+                }}
+                disabled={addToCartMutation.isPending || !productAvailable}
+              >
+                {addToCartMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : !productAvailable ? (
+                  <span className="text-xs">Sold Out</span>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-4 h-4 mr-2" /> Add
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button size="sm" asChild>
+                <Link href={`/products/${product.id}`}>View</Link>
+              </Button>
+            )}
           </div>
         </div>
       </Card>
-    </div>
+    </SlideInOnScroll>
   );
 }

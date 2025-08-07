@@ -23,6 +23,7 @@ import { api } from "@/lib/trpc/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/utils";
 import { FullScreenLoader } from "@/components/ui/loader";
+import Image from "next/image";
 
 function CartItem({ item, onUpdate, onRemove, isMutating }: any) {
   // FIX: Convert Prisma Decimal to number for calculation
@@ -31,9 +32,11 @@ function CartItem({ item, onUpdate, onRemove, isMutating }: any) {
   return (
     <div className="flex items-start space-x-4 py-4">
       <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-        <img
+        <Image
           src={item.product.imageUrls[0] || "/placeholder.svg"}
           alt={item.product.name}
+          width={100}
+          height={100}
           className="w-full h-full object-cover"
         />
       </div>

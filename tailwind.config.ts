@@ -76,6 +76,8 @@ const config: Config = {
         "slide-up": "slideUp 0.5s ease-out",
         "scale-in": "scaleIn 0.3s ease-out",
         float: "float 6s ease-in-out infinite",
+        "bounce-subtle":
+          "bounce-subtle 3s infinite cubic-bezier(0.4, 0, 0.6, 1)",
       },
       keyframes: {
         fadeIn: {

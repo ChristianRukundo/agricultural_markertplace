@@ -23,7 +23,17 @@ export const cartRouter = createTRPCRouter({
       where: { id: cart.id },
       include: {
         items: {
-          include: { product: true },
+          include: {
+            product: {
+              include: {
+                farmer: {
+                  include: {
+                    profile: true,
+                  },
+                },
+              },
+            },
+          },
           orderBy: { createdAt: "desc" },
         },
       },

@@ -46,7 +46,6 @@ export default function ProductDetailPage() {
   const [reviewRating, setReviewRating] = useState(5);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
-  // FIX 2: Destructure `refetch` from the useQuery hook
   const {
     data: product,
     isLoading,
@@ -59,10 +58,9 @@ export default function ProductDetailPage() {
     { enabled: !!product?.farmerId }
   );
 
-  
   const { data: relatedProductsData } = api.product.getProducts.useQuery(
     {
-      limit: 5, 
+      limit: 5,
       categoryId: product?.categoryId,
     },
     { enabled: !!product?.categoryId }
@@ -71,8 +69,8 @@ export default function ProductDetailPage() {
   const relatedProducts = useMemo(() => {
     if (!relatedProductsData) return [];
     return relatedProductsData.products
-      .filter((p) => p.id !== productId) 
-      .slice(0, 4); 
+      .filter((p) => p.id !== productId)
+      .slice(0, 4);
   }, [relatedProductsData, productId]);
 
   const addToCartMutation = api.cart.addItem.useMutation({
@@ -99,7 +97,7 @@ export default function ProductDetailPage() {
       });
       setReviewText("");
       setReviewRating(5);
-      // FIX 2: Call the refetch function correctly.
+
       refetchProduct();
     },
     onError: (error) => {
@@ -156,7 +154,7 @@ export default function ProductDetailPage() {
 
   const productImages =
     product.imageUrls.length > 0 ? product.imageUrls : ["/placeholder.svg"];
-  const productUnit = "kg"; // This should be added to the schema.
+  const productUnit = "kg";
 
   return (
     <div className="min-h-screen bg-background">
@@ -344,14 +342,12 @@ export default function ProductDetailPage() {
                       onClick={() =>
                         setQuantity(
                           Math.min(
-                            product.quantityAvailable.toNumber(),
+                            Number(product.quantityAvailable),
                             quantity + 1
                           )
                         )
                       }
-                      disabled={
-                        quantity >= product.quantityAvailable.toNumber()
-                      }
+                      disabled={quantity >= Number(product.quantityAvailable)}
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
@@ -362,9 +358,7 @@ export default function ProductDetailPage() {
                     <span className="font-medium">Total Price:</span>
                     <span className="text-xl font-bold text-primary">
                       RWF{" "}
-                      {(
-                        product.unitPrice.toNumber() * quantity
-                      ).toLocaleString()}
+                      {(Number(product.unitPrice) * quantity).toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -378,7 +372,7 @@ export default function ProductDetailPage() {
                   disabled={
                     addToCartMutation.isPending ||
                     product.status !== "ACTIVE" ||
-                    quantity > product.quantityAvailable.toNumber()
+                    quantity > Number(product.quantityAvailable)
                   }
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
